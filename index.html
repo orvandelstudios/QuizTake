@@ -1,0 +1,2333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QUIZTAKE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Layout idea: a projection booth. Slate strip on top, Academy-leader countdown as the clock, answers as a 2x2 contact sheet. */
+  --booth:#121011;        /* background: the dark of the booth */
+  --stock:#1d1a1b;        /* surfaces: film stock */
+  --stock-2:#272324;
+  --screen:#efe7d9;       /* text: warm silver screen */
+  --dim:#a0958a;          /* secondary text */
+  --lamp:#f2b441;         /* accent: projector lamp amber */
+  --good:#5fc28e;
+  --bad:#e5534b;
+  --line:#3a3435;
+  --display:"Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --body:"Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  --serif:"Instrument Serif", Georgia, serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--booth);color:var(--screen);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--lamp);outline-offset:3px}
+.wrap{max-width:980px;margin:0 auto;padding:0 20px}
+.sprockets{height:14px;background:
+  repeating-linear-gradient(90deg,transparent 0 10px,var(--booth) 10px 22px,transparent 22px 34px) center/34px 6px repeat-x,var(--stock)}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;background:none;border:0;padding:0}
+.brand b{font-family:var(--display);font-weight:900;font-size:28px;letter-spacing:.04em}
+.brand span{font-family:var(--serif);font-style:italic;color:var(--dim);font-size:17px}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{background:none;border:1px solid transparent;border-radius:999px;padding:6px 14px;color:var(--dim);font-weight:600;font-size:14px}
+nav button[aria-current="page"]{color:var(--screen);border-color:var(--line);background:var(--stock)}
+nav button:hover{color:var(--screen)}
+main{padding:28px 0 64px}
+.screen{display:none}
+.screen.on{display:block}
+
+/* HOME */
+.hero{display:grid;grid-template-columns:1.3fr 1fr;gap:32px;align-items:end;padding-bottom:28px;border-bottom:1px solid var(--line)}
+.marquee{font-family:var(--display);font-weight:900;font-size:clamp(64px,13vw,132px);line-height:.82;letter-spacing:.01em;margin:0;text-wrap:balance;
+  color:var(--screen);text-shadow:0 0 28px rgba(242,180,65,.18)}
+.marquee em{font-style:normal;color:var(--lamp)}
+.tagline{font-family:var(--serif);font-style:italic;font-size:clamp(22px,3vw,30px);margin:14px 0 0;color:var(--screen)}
+.rankcard{background:var(--stock);border:1px solid var(--line);border-radius:14px;padding:18px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.rankname{font-family:var(--display);font-weight:800;font-size:34px;line-height:1;margin:6px 0 10px}
+.bar{height:8px;background:var(--stock-2);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--lamp);border-radius:99px;transition:width .6s ease}
+.small{font-size:13px;color:var(--dim)}
+.tabular{font-variant-numeric:tabular-nums}
+.modes{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:28px}
+.mode{position:relative;text-align:left;background:var(--stock);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:6px;transition:border-color .15s,transform .15s}
+.mode:hover:not([disabled]){border-color:var(--lamp);transform:translateY(-2px)}
+.mode[disabled]{opacity:.55;cursor:default}
+.mode h3{font-family:var(--display);font-weight:800;font-size:28px;margin:0;line-height:1}
+.mode p{margin:0;color:var(--dim);font-size:14px}
+.mode .meta{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--lamp);margin-top:6px}
+.cats{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{border:1px solid var(--line);background:var(--booth);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600}
+.chip:hover{border-color:var(--lamp);color:var(--lamp)}
+
+/* PLAY */
+.slate{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.slate div{padding:8px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:2px;flex:1;min-width:110px}
+.slate div:last-child{border-right:0}
+.slate small{color:var(--dim);font-size:10px}
+.slate b{font-size:15px;color:var(--screen)}
+.slate .hot b{color:var(--lamp)}
+.stage{display:grid;grid-template-columns:150px 1fr;gap:28px;align-items:center;margin:26px 0 18px}
+.leader{position:relative;width:150px;height:150px}
+.leader svg{width:100%;height:100%;display:block}
+.leader .num{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-weight:900;font-size:64px;color:var(--booth)}
+.qcat{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--lamp)}
+.qtext{font-family:var(--body);font-weight:600;font-size:clamp(22px,3.2vw,30px);line-height:1.25;margin:8px 0 0;text-wrap:balance}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ans{display:flex;align-items:center;gap:12px;text-align:left;background:var(--stock);border:1px solid var(--line);border-radius:12px;padding:16px;font-size:17px;font-weight:500;min-height:64px;transition:border-color .12s,background .12s}
+.ans kbd{font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-radius:6px;padding:2px 7px;color:var(--dim);flex:none}
+.ans:hover:not([disabled]){border-color:var(--lamp)}
+.ans[disabled]{cursor:default}
+.ans.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 16%,var(--stock))}
+.ans.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 16%,var(--stock))}
+.ans.faded{opacity:.45}
+.lore{margin-top:18px;border-left:3px solid var(--lamp);background:var(--stock);border-radius:0 12px 12px 0;padding:16px 18px;display:none}
+.lore.on{display:block;animation:rise .35s ease}
+.lore .verdict{font-family:var(--display);font-weight:800;font-size:24px;line-height:1}
+.lore .verdict.good{color:var(--good)} .lore .verdict.bad{color:var(--bad)}
+.lore p{font-family:var(--serif);font-size:21px;line-height:1.35;margin:8px 0 12px;max-width:62ch}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{background:var(--lamp);color:#1a1405;border:0;border-radius:10px;padding:12px 20px;font-weight:700;font-size:15px}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--screen);border:1px solid var(--line)}
+.btn.ghost:hover{border-color:var(--screen)}
+.pts{font-family:var(--mono);font-size:13px;color:var(--dim)}
+@keyframes rise{from{opacity:.2;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* RESULTS */
+.wrapcard{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+.bigscore{font-family:var(--display);font-weight:900;font-size:clamp(72px,12vw,120px);line-height:.85;color:var(--lamp)}
+.filmstrip{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0}
+.frame{width:30px;height:40px;border-radius:4px;border:2px solid var(--line);display:grid;place-items:center;font-family:var(--mono);font-size:11px}
+.frame.g{background:color-mix(in srgb,var(--good) 30%,var(--stock));border-color:var(--good)}
+.frame.b{background:color-mix(in srgb,var(--bad) 25%,var(--stock));border-color:var(--bad)}
+.panel{background:var(--stock);border:1px solid var(--line);border-radius:14px;padding:18px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+.stat b{display:block;font-family:var(--display);font-weight:800;font-size:30px;line-height:1}
+.stat span{font-size:12px;color:var(--dim)}
+.newach{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--screen);color:var(--booth);padding:10px 16px;border-radius:10px;font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+
+/* PROFILE */
+h2.title{font-family:var(--display);font-weight:800;font-size:44px;margin:0 0 4px;line-height:1}
+.lead{color:var(--dim);margin:0 0 20px;max-width:62ch}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.catrow{display:grid;grid-template-columns:150px 1fr 56px;gap:12px;align-items:center;padding:7px 0;font-size:14px}
+.catrow .bar i{background:var(--screen)}
+.achs{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.ach{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:2px}
+.ach b{font-size:14px}
+.ach span{font-size:12px;color:var(--dim)}
+.ach.locked{opacity:.45;border-style:dashed}
+.ach.got{border-color:var(--lamp)}
+
+/* BOARD */
+.tabs{display:flex;gap:6px;margin-bottom:14px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);font-size:15px}
+th{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-weight:500}
+td.num,th.num{text-align:right}
+tr.me td{color:var(--lamp)}
+.note{font-size:13px;color:var(--dim);margin-top:12px}
+footer{padding:20px 0 30px;color:var(--dim);font-size:12px}
+
+@media (max-width:720px){
+  .hero,.wrapcard,.grid2{grid-template-columns:1fr}
+  .modes,.answers,.achs{grid-template-columns:1fr}
+  .stage{grid-template-columns:96px 1fr;gap:16px}
+  .leader{width:96px;height:96px}
+  .leader .num{font-size:42px}
+  .catrow{grid-template-columns:110px 1fr 48px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---- additions: setup, rate deck, taste, studio ---- */
+.levels{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.lvl{position:relative;text-align:left;background:var(--stock);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:4px;min-height:132px}
+.lvl:hover:not([disabled]){border-color:var(--lamp)}
+.lvl[disabled]{opacity:.42;cursor:not-allowed}
+.lvl .no{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--dim)}
+.lvl b{font-family:var(--display);font-weight:800;font-size:24px;line-height:1}
+.lvl .mix{display:flex;gap:3px;margin-top:auto}
+.lvl .mix i{height:6px;border-radius:2px;display:block}
+.lvl .stars{font-size:15px;letter-spacing:2px;color:var(--lamp)}
+.lvl.current{border-color:var(--lamp);box-shadow:0 0 0 1px var(--lamp) inset}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--dim);margin:0 0 16px}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:14px;height:6px;border-radius:2px;display:block}
+.passline{font-family:var(--display);font-weight:800;font-size:26px;margin:4px 0 0}
+.passline.good{color:var(--good)} .passline.bad{color:var(--bad)}
+@media (max-width:720px){.levels{grid-template-columns:repeat(2,1fr)}}
+.mode.wide{grid-column:1 / -1;flex-direction:row;align-items:center;gap:22px}
+.mode.wide .minis{display:flex;gap:8px;flex:none}
+.mini{width:54px;height:81px;border-radius:6px;overflow:hidden;position:relative;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.mini svg{width:100%;height:100%;display:block}
+.group{margin:0 0 20px}
+.group h3{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:500;margin:0 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip[aria-pressed="true"]{background:var(--lamp);border-color:var(--lamp);color:#1a1405}
+.countline{font-family:var(--display);font-weight:800;font-size:30px;line-height:1;margin:6px 0 14px}
+.countline small{font-family:var(--body);font-weight:500;font-size:14px;color:var(--dim);margin-left:6px}
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.presets .chip{border-style:dashed}
+
+.ratewrap{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:32px;align-items:start}
+.deck{position:relative;width:100%;aspect-ratio:2/3;touch-action:none;user-select:none}
+.poster{position:absolute;inset:0;border-radius:14px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.55);background:var(--stock);cursor:grab;will-change:transform}
+.poster.behind{transform:scale(.94) translateY(14px);filter:brightness(.6);cursor:default}
+.poster.fly{transition:transform .35s ease-in,opacity .35s ease-in}
+.poster.snap{transition:transform .25s ease}
+.poster svg{position:absolute;inset:0;width:100%;height:100%}
+.poster .ptext{position:absolute;left:0;right:0;bottom:0;padding:18px 16px 16px;background:linear-gradient(transparent,rgba(0,0,0,.72) 38%)}
+.poster .ptitle{font-family:var(--display);font-weight:900;text-transform:uppercase;line-height:.9;letter-spacing:.01em;color:#fff;text-wrap:balance;margin:0}
+.poster .pmeta{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.82);margin-top:8px}
+.poster .ptop{position:absolute;top:12px;left:14px;right:14px;display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.85)}
+.stamp{position:absolute;top:26px;padding:4px 12px;border:4px solid;border-radius:8px;font-family:var(--display);font-weight:900;font-size:40px;letter-spacing:.06em;opacity:0;transform:rotate(-12deg);pointer-events:none}
+.stamp.like{left:18px;color:var(--good);border-color:var(--good)}
+.stamp.nope{right:18px;color:var(--bad);border-color:var(--bad);transform:rotate(12deg)}
+.stamp.unseen{left:50%;top:auto;bottom:40%;transform:translateX(-50%);color:var(--screen);border-color:var(--screen);font-size:28px}
+.rbtns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:16px}
+.rbtn{border:1px solid var(--line);background:var(--stock);border-radius:12px;padding:12px 6px;font-weight:700;font-size:14px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.rbtn kbd{font-family:var(--mono);font-size:11px;color:var(--dim);font-weight:500}
+.rbtn.nope:hover{border-color:var(--bad);color:var(--bad)}
+.rbtn.like:hover{border-color:var(--good);color:var(--good)}
+.rbtn.unseen:hover{border-color:var(--screen)}
+.poster .realposter,.mini .realposter{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.poster.hasreal .ptitle,.poster.hasreal .ptop{display:none}
+.poster.hasreal .ptext{background:linear-gradient(transparent,rgba(0,0,0,.75) 45%);padding-top:28px}
+.keybox{border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:16px;display:flex;flex-direction:column;gap:8px}
+.keybox label{font-size:14px;font-weight:600}
+.keybox small{display:block;color:var(--dim);font-size:12px;font-weight:400;margin-top:2px}
+.keybox .row input{flex:1;min-width:180px;background:var(--booth);color:var(--screen);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:14px}
+.ratedone{position:absolute;inset:0;border:1px dashed var(--line);border-radius:14px;display:grid;place-items:center;text-align:center;padding:20px;color:var(--dim)}
+
+.typecard{background:var(--stock);border:1px solid var(--lamp);border-radius:14px;padding:18px 20px;margin-bottom:16px}
+.typecard .t{font-family:var(--serif);font-size:clamp(24px,3.4vw,34px);line-height:1.15;margin:6px 0 0;text-wrap:balance}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.tile{background:var(--stock);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.tile b{display:block;font-family:var(--display);font-weight:800;font-size:30px;line-height:1}
+.tile span{font-size:12px;color:var(--dim)}
+.aff{display:grid;grid-template-columns:140px 1fr 112px;gap:12px;align-items:center;padding:6px 0;font-size:14px}
+.affbar{position:relative;height:10px;background:var(--stock-2);border-radius:99px}
+.affbar::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--dim)}
+.affbar i{position:absolute;top:0;bottom:0;border-radius:99px}
+.affbar i.pos{left:50%;background:var(--good)}
+.affbar i.neg{right:50%;background:var(--bad)}
+.tagrow{display:flex;flex-wrap:wrap;gap:6px}
+.tag{border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13px}
+.tag b{font-family:var(--mono);font-size:11px;color:var(--lamp);margin-left:4px}
+.recs{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.rec{display:flex;flex-direction:column;gap:6px}
+.rec .mini{width:100%;height:auto;aspect-ratio:2/3}
+.rec b{font-size:13px;line-height:1.25}
+.rec span{font-size:11px;color:var(--dim);line-height:1.3}
+.consent{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:16px}
+.consent input{width:20px;height:20px;accent-color:var(--lamp);flex:none;margin-top:2px}
+.consent label{font-size:14px}
+.consent small{display:block;color:var(--dim);font-size:12px;margin-top:4px}
+.sectionhead{font-family:var(--display);font-weight:800;font-size:30px;margin:28px 0 12px;line-height:1}
+.subhead{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:14px 0 6px}
+.warn{border-left:3px solid var(--lamp);padding:10px 14px;background:var(--stock);border-radius:0 10px 10px 0;font-size:14px;color:var(--dim);margin-bottom:16px}
+@media (max-width:720px){
+  .ratewrap{grid-template-columns:1fr}
+  .deck{max-width:320px;margin:0 auto}
+  .tiles{grid-template-columns:repeat(2,1fr)}
+  .recs{grid-template-columns:repeat(3,1fr)}
+  .mode.wide{flex-direction:column;align-items:flex-start}
+  .aff{grid-template-columns:96px 1fr 96px}
+}
+</style>
+</head>
+<body>
+<div class="sprockets" aria-hidden="true"></div>
+<div class="wrap">
+  <header class="top">
+    <button class="brand" id="brandBtn" type="button" aria-label="QUIZTAKE home"><b>QUIZTAKE</b><span>by Orvandel Studios</span></button>
+    <nav aria-label="Main">
+      <button type="button" id="nav-home" data-go="home" aria-current="page">Play</button>
+      <button type="button" id="nav-rate" data-go="rate">Rate films</button>
+      <button type="button" id="nav-lore" data-go="lore">Your Lore</button>
+      <button type="button" id="nav-board" data-go="board">Leaderboard</button>
+      <button type="button" id="nav-studio" data-go="studio" hidden>Studio insights</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- HOME -->
+    <section class="screen on" id="s-home" aria-label="Choose a mode">
+      <div class="hero">
+        <div>
+          <h1 class="marquee">QUIZ<em>TAKE</em></h1>
+          <p class="tagline">Think you're a cinéphile? Prove it.</p>
+        </div>
+        <div class="rankcard" aria-live="polite">
+          <div class="eyebrow">Your billing</div>
+          <div class="rankname" id="homeRank">Extra</div>
+          <div class="bar"><i id="homeBar" style="width:0%"></i></div>
+          <div class="small tabular" id="homeXp" style="margin-top:8px">0 XP · 1,000 XP to Background Actor</div>
+        </div>
+      </div>
+
+      <p class="note" id="bankNote" hidden></p>
+      <div class="modes">
+        <button class="mode wide" type="button" id="m-career">
+          <span style="display:flex;flex-direction:column;gap:6px;flex:1">
+            <span class="meta" id="careerMeta">Level 1 of 12 · Usher</span>
+            <h3>Career Mode</h3>
+            <p>Twelve levels, from easy openers to obscure questions only an archivist could answer. Score 6 out of 8 to unlock the next level.</p>
+          </span>
+          <span class="countline tabular" id="careerStars" style="margin:0">0 ★</span>
+        </button>
+        <button class="mode" type="button" id="m-feature">
+          <span class="meta">10 scenes · 15 s each</span>
+          <h3>Feature Presentation</h3>
+          <p>Mixed questions in three acts: easy opening, harder middle, a tough finale.</p>
+        </button>
+        <button class="mode" type="button" id="m-daily">
+          <span class="meta" id="dailyMeta">7 scenes · one take per day</span>
+          <h3>Daily Reel</h3>
+          <p>The same seven questions for every player today. Compare on the leaderboard.</p>
+        </button>
+        <button class="mode" type="button" id="m-sudden">
+          <span class="meta">10 s each · one miss ends it</span>
+          <h3>Sudden Death</h3>
+          <p>Keep answering until you get one wrong. Difficulty climbs as you go.</p>
+        </button>
+        <button class="mode" type="button" id="m-deep" hidden>
+          <span class="meta" id="deepMeta">10 scenes · 20 s each</span>
+          <h3>Deep Cuts</h3>
+          <p>Three famous actors, one film. One of them is in a tiny role, or in a film from before they were famous.</p>
+        </button>
+        <button class="mode" type="button" id="m-custom">
+          <span class="meta" id="customMeta">Pick category, era and genre</span>
+          <h3>Custom Reel</h3>
+          <p>Build your own quiz: 80s sci-fi, silent comedy, westerns, horror night.</p>
+        </button>
+        <button class="mode wide" type="button" id="m-rate">
+          <span class="minis" id="homeMinis" aria-hidden="true"></span>
+          <span style="display:flex;flex-direction:column;gap:6px">
+            <span class="meta" id="rateMeta">Swipe right to like · left to pass</span>
+            <h3>Rate Films</h3>
+            <p>Swipe through films to build your taste profile. The more you rate, the better your recommendations.</p>
+          </span>
+        </button>
+      </div>
+    </section>
+
+    <!-- CAREER LEVELS -->
+    <section class="screen" id="s-levels" aria-label="Career Mode">
+      <h2 class="title">Career Mode</h2>
+      <p class="lead">Each level is 8 questions. Score 6 to pass and unlock the next one; 7 earns two stars, 8 earns three. Questions get harder, and slower to answer, as you climb.</p>
+      <div class="legend" id="legend"></div>
+      <div class="levels" id="levelGrid"></div>
+    </section>
+
+    <!-- SETUP (Custom Reel) -->
+    <section class="screen" id="s-setup" aria-label="Set up a Custom Reel">
+      <h2 class="title">Custom Reel</h2>
+      <p class="lead">Choose any mix of category, era and genre. Up to 10 matching questions, easiest first.</p>
+      <div class="presets" id="presets"></div>
+      <div class="group"><h3>Category</h3><div class="chips" id="fCat"></div></div>
+      <div class="group"><h3>Era</h3><div class="chips" id="fEra"></div></div>
+      <div class="group"><h3>Genre</h3><div class="chips" id="fGen"></div></div>
+      <div class="countline tabular" id="fCount">0 <small>questions match</small></div>
+      <div class="row">
+        <button class="btn" type="button" id="fStart">Start the reel</button>
+        <button class="btn ghost" type="button" id="fReset">Clear filters</button>
+      </div>
+    </section>
+
+    <!-- PLAY -->
+    <section class="screen" id="s-play" aria-label="Question">
+      <div class="slate" aria-label="Game status">
+        <div><small>Reel</small><b id="slMode">Feature</b></div>
+        <div><small>Scene</small><b class="tabular" id="slScene">01 / 10</b></div>
+        <div><small>Score</small><b class="tabular" id="slScore">0</b></div>
+        <div class="hot"><small>Streak</small><b class="tabular" id="slStreak">×1.0</b></div>
+      </div>
+      <div class="stage">
+        <div class="leader" aria-hidden="true">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="48" fill="#cfc6b6"/>
+            <path id="wedge" d="" fill="#8c8377"/>
+            <circle cx="50" cy="50" r="38" fill="none" stroke="#121011" stroke-width="2"/>
+            <circle cx="50" cy="50" r="31" fill="none" stroke="#121011" stroke-width="1.5"/>
+            <line x1="50" y1="0" x2="50" y2="100" stroke="#121011" stroke-width="1.5"/>
+            <line x1="0" y1="50" x2="100" y2="50" stroke="#121011" stroke-width="1.5"/>
+          </svg>
+          <div class="num tabular" id="leaderNum">15</div>
+        </div>
+        <div>
+          <div class="qcat" id="qCat">Directors</div>
+          <p class="qtext" id="qText" aria-live="polite">Question</p>
+        </div>
+      </div>
+      <div class="answers" id="answers"></div>
+      <div class="lore" id="lore" aria-live="polite">
+        <div class="verdict" id="verdict">Correct</div>
+        <p id="loreText"></p>
+        <div class="row">
+          <button class="btn" type="button" id="nextBtn">Next scene</button>
+          <span class="pts" id="ptsLine"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULTS -->
+    <section class="screen" id="s-result" aria-label="Results">
+      <div class="wrapcard">
+        <div>
+          <div class="eyebrow" id="rsMode">Feature Presentation · That's a wrap</div>
+          <div class="bigscore tabular" id="rsScore">0</div>
+          <div class="passline" id="rsPass" hidden></div>
+          <div class="filmstrip" id="rsStrip" aria-label="Answers in order"></div>
+          <div class="stats">
+            <div class="stat"><b class="tabular" id="rsCorrect">0/10</b><span>correct</span></div>
+            <div class="stat"><b class="tabular" id="rsStreak">0</b><span>best streak</span></div>
+            <div class="stat"><b class="tabular" id="rsXp">+0</b><span>XP earned</span></div>
+          </div>
+          <div class="row">
+            <button class="btn" type="button" id="againBtn">Play again</button>
+            <button class="btn ghost" type="button" id="copyBtn">Copy result</button>
+            <button class="btn ghost" type="button" id="homeBtn">All modes</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="eyebrow">Billing</div>
+          <div class="rankname" id="rsRank">Extra</div>
+          <div class="bar"><i id="rsBar" style="width:0%"></i></div>
+          <div class="small tabular" id="rsRankLine" style="margin-top:8px"></div>
+          <div class="newach" id="rsAch"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RATE -->
+    <section class="screen" id="s-rate" aria-label="Rate films">
+      <div class="ratewrap">
+        <div>
+          <div class="deck" id="deck"></div>
+          <div class="rbtns">
+            <button class="rbtn nope" type="button" id="rNope">Not for me<kbd>←</kbd></button>
+            <button class="rbtn unseen" type="button" id="rUnseen">Haven't seen it<kbd>↓</kbd></button>
+            <button class="rbtn like" type="button" id="rLike">Like it<kbd>→</kbd></button>
+          </div>
+        </div>
+        <div>
+          <h2 class="title">Rate films</h2>
+          <p class="lead">Drag the poster right if you liked the film and left if you didn't. Tap "Haven't seen it" to skip it. Every rating sharpens your taste profile. The deck mixes classics, crowd-pleasers and famous flops, so be honest.</p>
+          <div class="tiles" style="grid-template-columns:repeat(3,1fr)">
+            <div class="tile"><b class="tabular" id="rtRated">0</b><span>rated</span></div>
+            <div class="tile"><b class="tabular" id="rtLiked">0</b><span>liked</span></div>
+            <div class="tile"><b class="tabular" id="rtLeft">0</b><span>left in the deck</span></div>
+          </div>
+          <div class="typecard" id="rtType"><div class="eyebrow">Your cinema type</div><p class="t" id="rtTypeText">Rate a few films you've seen to reveal it.</p></div>
+          <div class="row">
+            <button class="btn ghost" type="button" id="rUndo">Undo last</button>
+            <button class="btn ghost" type="button" id="rToLore">See your taste analysis</button>
+          </div>
+          <p class="note" id="posterNote">Posters are designed title cards for this prototype, not official artwork.</p>
+          <div class="keybox" id="tmdbBox" hidden>
+            <label for="tmdbKey">Real posters from TMDB
+              <small>Paste your free TMDB API key or API read access token. It is stored only in this browser and sent only to TMDB. Personal, non-commercial use only.</small></label>
+            <div class="row">
+              <input id="tmdbKey" type="password" autocomplete="off" placeholder="TMDB API key">
+              <button class="btn" type="button" id="tmdbSave">Save key</button>
+              <button class="btn ghost" type="button" id="tmdbClear">Remove</button>
+            </div>
+            <span class="small" id="tmdbStatus"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LORE PROFILE -->
+    <section class="screen" id="s-lore" aria-label="Your Lore">
+      <h2 class="title">Your Lore</h2>
+      <p class="lead">What you like and what you know about cinema, built from your ratings and your quiz answers.</p>
+
+      <div class="typecard"><div class="eyebrow">Your cinema type</div><p class="t" id="lpType">Rate a few films you've seen to reveal it.</p></div>
+      <div class="tiles">
+        <div class="tile"><b class="tabular" id="lpRated">0</b><span>films rated</span></div>
+        <div class="tile"><b class="tabular" id="lpLikeRate">–</b><span>of seen films liked</span></div>
+        <div class="tile"><b class="tabular" id="lpGames">0</b><span>quizzes played</span></div>
+        <div class="tile"><b class="tabular" id="lpBest">0</b><span>best quiz score</span></div>
+      </div>
+
+      <div class="sectionhead">Taste</div>
+      <div class="grid2">
+        <div class="panel">
+          <p class="small" style="margin:0 0 10px">Green means you liked more than you passed on, red means the opposite. Bars grow with the number of films you've rated, so 21 of 25 counts for far more than 1 of 1. Films you haven't seen are left out (<span id="lpBase">–</span>).</p>
+          <div class="subhead" style="margin-top:0">Genres you lean towards</div>
+          <div id="lpGenAff"></div>
+          <div class="subhead">Eras you lean towards</div>
+          <div id="lpEraAff"></div>
+        </div>
+        <div class="panel">
+          <div class="subhead" style="margin-top:0">Directors you like</div>
+          <div class="tagrow" id="lpDirs"></div>
+          <div class="subhead">Where your taste travels</div>
+          <div class="tagrow" id="lpCountries"></div>
+          <div class="consent">
+            <input type="checkbox" id="shareToggle">
+            <label for="shareToggle">Share my film ratings with Orvandel Studios for audience research
+              <small id="shareNote">Off by default. Ratings are only reported as combined totals. Turn it off at any time to delete the shared copy.</small></label>
+          </div>
+        </div>
+      </div>
+      <div class="subhead" style="margin-top:20px">Up next for you</div>
+      <div class="recs" id="lpRecs"></div>
+
+      <div class="subhead" style="margin-top:24px">You and the critics</div>
+      <div class="panel">
+        <p style="margin:0 0 10px" id="lpCritic">Rate a mix of films to see how your taste compares with the critics.</p>
+        <div id="lpRecAff"></div>
+        <div class="subhead">Your guilty pleasures</div>
+        <div class="tagrow" id="lpGuilty"></div>
+      </div>
+
+      <div class="sectionhead">Knowledge</div>
+      <div class="grid2">
+        <div class="panel">
+          <div class="eyebrow">Billing</div>
+          <div class="rankname" id="lpRank">Extra</div>
+          <div class="bar"><i id="lpBar" style="width:0%"></i></div>
+          <div class="small tabular" id="lpXp" style="margin-top:8px"></div>
+          <div class="subhead">Accuracy by category</div>
+          <div id="lpCats"></div>
+          <div class="subhead">Accuracy by era</div>
+          <div id="lpEras"></div>
+        </div>
+        <div class="panel">
+          <div class="eyebrow" style="margin-bottom:10px">Achievements <span id="lpAchCount"></span></div>
+          <div class="achs" id="lpAchs"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LEADERBOARD -->
+    <section class="screen" id="s-board" aria-label="Leaderboard">
+      <h2 class="title">Leaderboard</h2>
+      <p class="lead">Career XP across all modes, and today's Daily Reel.</p>
+      <div class="tabs" role="tablist">
+        <button class="chip" type="button" role="tab" id="tab-career" aria-selected="true">Career XP</button>
+        <button class="chip" type="button" role="tab" id="tab-daily" aria-selected="false">Today's Daily Reel</button>
+      </div>
+      <div class="panel" style="overflow-x:auto">
+        <table>
+          <thead><tr><th>#</th><th>Player</th><th id="boardColA">Billing</th><th class="num" id="boardColB">XP</th></tr></thead>
+          <tbody id="boardBody"><tr><td colspan="4" class="small">Loading the board…</td></tr></tbody>
+        </table>
+      </div>
+      <div class="note" id="boardNote"></div>
+    </section>
+
+    <!-- STUDIO INSIGHTS (owner only) -->
+    <section class="screen" id="s-studio" aria-label="Studio insights">
+      <h2 class="title">Studio insights</h2>
+      <p class="lead">Combined film ratings from players who chose to share them. Only you, as the owner, can see this page.</p>
+      <div class="warn">Bars are weighted by the number of ratings, so a genre with 2 votes can't outrank one with 200. Small groups can reveal individual tastes. Report only totals from larger groups outside the studio, and keep a lawful basis and consent record for every shared rating.</div>
+      <div class="tiles">
+        <div class="tile"><b class="tabular" id="stPlayers">0</b><span>players sharing</span></div>
+        <div class="tile"><b class="tabular" id="stRatings">0</b><span>ratings shared</span></div>
+        <div class="tile"><b class="tabular" id="stLike">–</b><span>like rate</span></div>
+        <div class="tile"><b class="tabular" id="stSeen">–</b><span>seen rate</span></div>
+      </div>
+      <div class="grid2">
+        <div class="panel">
+          <div class="subhead" style="margin-top:0">Like rate by genre</div>
+          <div id="stGen"></div>
+          <div class="subhead">Like rate by era</div>
+          <div id="stEra"></div>
+          <div class="subhead">Audience vs critics</div>
+          <div id="stRec"></div>
+        </div>
+        <div class="panel" style="overflow-x:auto">
+          <div class="subhead" style="margin-top:0">Most-rated films</div>
+          <table><thead><tr><th>Film</th><th class="num">Ratings</th><th class="num">Liked</th><th class="num">Not seen</th></tr></thead><tbody id="stFilms"></tbody></table>
+        </div>
+      </div>
+      <div class="note" id="stNote"></div>
+    </section>
+  </main>
+  <footer>QUIZTAKE is a game by Orvandel Studios. Questions, lore and designed posters made for this prototype; facts checked to the best of our knowledge as of 2026.<span id="tmdbAttr" hidden> Real posters and film data come from TMDB. This product uses the TMDB API but is not endorsed or certified by TMDB.</span></footer>
+</div>
+<div class="sprockets" aria-hidden="true"></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* QUIZTAKE question bank.
+   Q(category, difficulty 1-3, year of the film concerned or 0 for general, "genre codes", question, [correct, wrong, wrong, wrong], lore)
+   Genres: dr Drama, co Comedy, ac Action & Adventure, sf Sci-Fi, fa Fantasy, ho Horror, th Thriller & Mystery,
+           cr Crime, an Animation, we Western, ro Romance, mu Musical & Music, wa War & History */
+window.QT_CATS = {
+  dir:"Directors", act:"Actors & Roles", char:"Famous Characters", craft:"Behind the Camera",
+  sound:"Score & Sound", hist:"Film History", award:"Awards & Festivals", world:"World Cinema",
+  cast:"Shared Screen", anim:"Animation", fran:"Franchises & Sequels", adapt:"Book to Screen", biz:"Box Office & Business"
+};
+window.QT_GENRES = {
+  dr:"Drama", co:"Comedy", ac:"Action & Adventure", sf:"Sci-Fi", fa:"Fantasy", ho:"Horror",
+  th:"Thriller & Mystery", cr:"Crime", an:"Animation", we:"Western", ro:"Romance", mu:"Musical & Music", wa:"War & History"
+};
+window.QT_ERAS = [
+  {id:"silent", name:"Silent & early sound", from:1888, to:1939},
+  {id:"golden", name:"Golden Age", from:1940, to:1959},
+  {id:"newwave", name:"New Waves", from:1960, to:1979},
+  {id:"blockbuster", name:"Blockbuster era", from:1980, to:1999},
+  {id:"millennium", name:"New millennium", from:2000, to:2014},
+  {id:"streaming", name:"Streaming age", from:2015, to:2100}
+];
+(function(){
+const B=[]; const Q=(c,d,y,g,q,o,l)=>B.push({cat:c,diff:d,year:y,genres:g?g.split(","):[],q,opts:o,lore:l});
+
+/* ---- Directors ---- */
+Q("dir",1,1975,"th,ac","Who directed Jaws (1975)?",["Steven Spielberg","George Lucas","Brian De Palma","John Carpenter"],"The mechanical shark broke down so often that Spielberg had to keep it off screen, and the suspense grew out of the malfunction.");
+Q("dir",1,1994,"cr","Who directed Pulp Fiction (1994)?",["Quentin Tarantino","Robert Rodriguez","Guy Ritchie","Danny Boyle"],"Pulp Fiction won the Palme d'Or at Cannes in 1994, two years after Tarantino's debut, Reservoir Dogs.");
+Q("dir",1,1960,"ho,th","Who directed Psycho (1960)?",["Alfred Hitchcock","Billy Wilder","Orson Welles","Roman Polanski"],"Hitchcock reportedly bought up copies of Robert Bloch's novel to keep the twist secret, and asked audiences not to reveal the ending.");
+Q("dir",1,1997,"ro,dr","Which director made both Titanic and Avatar?",["James Cameron","Peter Jackson","Ridley Scott","Robert Zemeckis"],"Cameron has directed three of the highest-grossing films ever: Avatar, Avatar: The Way of Water and Titanic.");
+Q("dir",2,2019,"th,dr","Who directed Parasite (2019)?",["Bong Joon-ho","Park Chan-wook","Lee Chang-dong","Kim Jee-woon"],"Parasite became the first film not in English to win the Oscar for Best Picture.");
+Q("dir",2,1968,"sf","Who directed 2001: A Space Odyssey?",["Stanley Kubrick","Ridley Scott","Andrei Tarkovsky","Steven Spielberg"],"Kubrick developed the story with Arthur C. Clarke, who wrote the novel in parallel with the film.");
+Q("dir",2,2001,"an,fa","Who directed Spirited Away?",["Hayao Miyazaki","Isao Takahata","Mamoru Hosoda","Makoto Shinkai"],"Spirited Away shared the Golden Bear in Berlin in 2002 and won the Oscar for Best Animated Feature the following year.");
+Q("dir",2,2000,"th","Which director made both Memento and Oppenheimer?",["Christopher Nolan","Denis Villeneuve","David Fincher","Darren Aronofsky"],"In Memento the colour scenes run backwards in time while the black-and-white scenes run forwards, until the two meet.");
+Q("dir",2,2008,"wa,dr","Kathryn Bigelow became the first woman to win Best Director for which film?",["The Hurt Locker","Zero Dark Thirty","Point Break","Detroit"],"At that ceremony The Hurt Locker beat Avatar, directed by her former husband James Cameron.");
+Q("dir",2,2017,"ho","Get Out (2017) was the feature directing debut of:",["Jordan Peele","Ari Aster","Robert Eggers","Boots Riley"],"Peele won the Oscar for Best Original Screenplay for Get Out.");
+Q("dir",3,1954,"ac,dr","Who directed Seven Samurai (1954)?",["Akira Kurosawa","Yasujirō Ozu","Kenji Mizoguchi","Masaki Kobayashi"],"Hollywood remade it as a western, The Magnificent Seven, in 1960.");
+Q("dir",3,1959,"dr","Who directed The 400 Blows (1959)?",["François Truffaut","Jean-Luc Godard","Éric Rohmer","Claude Chabrol"],"Truffaut had been barred from Cannes as a hostile critic in 1958. A year later he won Best Director there.");
+Q("dir",3,1948,"dr","Who directed Bicycle Thieves (1948)?",["Vittorio De Sica","Roberto Rossellini","Federico Fellini","Luchino Visconti"],"De Sica cast non-professionals. His lead, Lamberto Maggiorani, was a factory worker.");
+Q("dir",3,1953,"dr","Who directed Tokyo Story (1953)?",["Yasujirō Ozu","Akira Kurosawa","Kenji Mizoguchi","Mikio Naruse"],"Ozu often placed the camera low, near the eye line of someone kneeling on a tatami mat.");
+Q("dir",2,2023,"co,fa","Who directed Barbie (2023)?",["Greta Gerwig","Sofia Coppola","Olivia Wilde","Emerald Fennell"],"Barbie was the highest-grossing film worldwide in 2023.");
+Q("dir",2,2021,"sf,ac","Who directed Dune (2021)?",["Denis Villeneuve","Ridley Scott","David Lynch","Alex Garland"],"David Lynch directed the earlier adaptation of Frank Herbert's novel, released in 1984.");
+Q("dir",3,1960,"ro,co","Who directed The Apartment (1960) and Some Like It Hot?",["Billy Wilder","William Wyler","George Cukor","Howard Hawks"],"The Apartment won Best Picture. No other black-and-white film won until Schindler's List.");
+Q("dir",2,1992,"we","Who directed and starred in the western Unforgiven (1992)?",["Clint Eastwood","Kevin Costner","Gene Hackman","Sam Elliott"],"Unforgiven won Best Picture. Eastwood dedicated it to his mentors Sergio Leone and Don Siegel.");
+Q("dir",3,1939,"we","Stagecoach (1939), the film that made John Wayne a star, was directed by:",["John Ford","Howard Hawks","Raoul Walsh","Henry Hathaway"],"Ford shot it partly in Monument Valley, which became his signature landscape.");
+Q("dir",2,2019,"wa","Who directed the war film 1917 (2019)?",["Sam Mendes","Christopher Nolan","Steven Spielberg","Peter Jackson"],"It was edited to look like almost one continuous shot. Roger Deakins won the Oscar for its cinematography.");
+Q("dir",3,1922,"ho","Who directed the silent vampire film Nosferatu (1922)?",["F. W. Murnau","Fritz Lang","Robert Wiene","Carl Theodor Dreyer"],"Bram Stoker's widow sued over the unauthorised adaptation, and a court ordered the prints destroyed. Some survived.");
+Q("dir",2,1973,"ho","Who directed The Exorcist (1973)?",["William Friedkin","John Carpenter","Roman Polanski","Brian De Palma"],"It was the first horror film nominated for Best Picture.");
+Q("dir",2,1996,"ho,co","Who directed Scream (1996)?",["Wes Craven","John Carpenter","Sam Raimi","Tobe Hooper"],"Craven had already created Freddy Krueger in A Nightmare on Elm Street.");
+Q("dir",2,1998,"wa","Who directed Saving Private Ryan (1998)?",["Steven Spielberg","Oliver Stone","Ridley Scott","Clint Eastwood"],"Its opening recreates the Omaha Beach landing on D-Day in a sequence of more than 20 minutes.");
+
+/* ---- Actors & Roles ---- */
+Q("act",1,1972,"cr,dr","Who played Vito Corleone in The Godfather (1972)?",["Marlon Brando","Al Pacino","Robert De Niro","James Caan"],"Robert De Niro later won an Oscar playing the young Vito in Part II, so two actors won Oscars for the same character.");
+Q("act",1,2003,"ac,fa","Who plays Captain Jack Sparrow in Pirates of the Caribbean?",["Johnny Depp","Orlando Bloom","Geoffrey Rush","Javier Bardem"],"Depp has said he based parts of Jack Sparrow on Keith Richards, who later appeared as Jack's father.");
+Q("act",1,2001,"fa","Who played Hermione Granger in the Harry Potter films?",["Emma Watson","Emma Stone","Bonnie Wright","Evanna Lynch"],"Watson was nine when she was cast, and played Hermione in all eight films.");
+Q("act",1,1995,"an,co","Who voices Woody in Toy Story?",["Tom Hanks","Tim Allen","Billy Crystal","Robin Williams"],"Tim Allen voices Buzz Lightyear. Billy Crystal turned Buzz down and later called it a mistake.");
+Q("act",1,1999,"sf,ac","Who played Neo in The Matrix (1999)?",["Keanu Reeves","Laurence Fishburne","Hugo Weaving","Will Smith"],"Will Smith has said he turned down Neo to make Wild Wild West.");
+Q("act",2,2007,"cr,th","Who played the killer Anton Chigurh in No Country for Old Men?",["Javier Bardem","Josh Brolin","Tommy Lee Jones","Woody Harrelson"],"Bardem won Best Supporting Actor, and the film won Best Picture.");
+Q("act",2,2008,"ac,cr","Heath Ledger won a posthumous Oscar for playing which character?",["The Joker","Ennis Del Mar","Patrick Verona","Tony in Doctor Parnassus"],"His Joker in The Dark Knight won Best Supporting Actor in 2009, a year after his death.");
+Q("act",2,0,"","Which performer has won the most acting Oscars?",["Katharine Hepburn","Meryl Streep","Frances McDormand","Ingrid Bergman"],"Hepburn won four Best Actress Oscars between 1934 and 1982.");
+Q("act",2,1979,"sf,ho","Who played Ellen Ripley in Alien (1979)?",["Sigourney Weaver","Linda Hamilton","Jamie Lee Curtis","Veronica Cartwright"],"Veronica Cartwright is in Alien too, as the navigator Lambert.");
+Q("act",2,1976,"cr,dr","Who played Travis Bickle in Taxi Driver?",["Robert De Niro","Harvey Keitel","Al Pacino","Joe Pesci"],"The famous mirror scene was largely improvised by De Niro.");
+Q("act",2,2022,"sf,co","Who won Best Actress for Everything Everywhere All at Once?",["Michelle Yeoh","Jamie Lee Curtis","Stephanie Hsu","Cate Blanchett"],"Yeoh was the first Asian woman to win Best Actress. Jamie Lee Curtis won Best Supporting Actress for the same film.");
+Q("act",3,1962,"wa,dr","Who played T. E. Lawrence in Lawrence of Arabia (1962)?",["Peter O'Toole","Omar Sharif","Alec Guinness","Albert Finney"],"O'Toole was nominated for Best Actor eight times without winning, and received an honorary Oscar in 2003.");
+Q("act",3,2000,"ro,dr","Who starred opposite Tony Leung in Wong Kar-wai's In the Mood for Love?",["Maggie Cheung","Gong Li","Zhang Ziyi","Michelle Yeoh"],"Tony Leung won Best Actor at Cannes in 2000 for the role.");
+Q("act",3,1982,"sf","Who played the replicant Roy Batty in Blade Runner (1982)?",["Rutger Hauer","Harrison Ford","Edward James Olmos","Brion James"],"Hauer, who was Dutch, cut down and reworked the 'tears in rain' speech himself.");
+Q("act",1,1953,"ro,co","Who played Princess Ann in Roman Holiday (1953)?",["Audrey Hepburn","Grace Kelly","Elizabeth Taylor","Katharine Hepburn"],"It was her first leading role in a Hollywood film, and it won her the Oscar for Best Actress.");
+Q("act",2,1959,"co","Some Like It Hot starred Tony Curtis, Jack Lemmon and:",["Marilyn Monroe","Jayne Mansfield","Kim Novak","Grace Kelly"],"Monroe plays Sugar Kane, the band's singer and ukulele player.");
+Q("act",2,2023,"wa,dr","Who won Best Actor for Oppenheimer?",["Cillian Murphy","Robert Downey Jr.","Matt Damon","Bradley Cooper"],"Robert Downey Jr. won Best Supporting Actor for the same film.");
+Q("act",2,1955,"dr","Which actor died in 1955 after starring in only three major films?",["James Dean","Montgomery Clift","Marlon Brando","Paul Newman"],"Dean received two posthumous Best Actor nominations, for East of Eden and Giant.");
+Q("act",3,2017,"ho","Who played Chris Washington in Get Out?",["Daniel Kaluuya","LaKeith Stanfield","Lil Rel Howery","John Boyega"],"Kaluuya later won Best Supporting Actor for Judas and the Black Messiah.");
+Q("act",1,1984,"co,fa","Who played Dr. Peter Venkman in Ghostbusters (1984)?",["Bill Murray","Dan Aykroyd","Harold Ramis","Rick Moranis"],"Dan Aykroyd and Harold Ramis, who also play Ghostbusters, wrote the script.");
+Q("act",2,1966,"we","Who plays 'the Good' in The Good, the Bad and the Ugly?",["Clint Eastwood","Lee Van Cleef","Eli Wallach","Gian Maria Volonté"],"Lee Van Cleef is the Bad and Eli Wallach the Ugly. The film completes Sergio Leone's Dollars trilogy.");
+
+/* ---- Famous Characters ---- */
+Q("char",1,1939,"fa,mu","In The Wizard of Oz, what is Dorothy's dog called?",["Toto","Rex","Benji","Spot"],"Toto was played by a female Cairn terrier named Terry.");
+Q("char",1,1991,"th,ho","What is Hannibal Lecter's profession in The Silence of the Lambs?",["Psychiatrist","Surgeon","Chemist","FBI agent"],"Anthony Hopkins is on screen for only about 16 minutes, yet he won Best Actor.");
+Q("char",2,1982,"sf,fa","In E.T. the Extra-Terrestrial, which sweets does Elliott use to lure E.T.?",["Reese's Pieces","M&M's","Skittles","Jelly beans"],"The film reportedly wanted M&M's, but Mars declined. Sales of Reese's Pieces jumped after release.");
+Q("char",2,1960,"ho","What is the motel in Psycho called?",["Bates Motel","The Overlook","Motel Hell","Starlight Motel"],"The house and motel set still stand on the Universal Studios backlot.");
+Q("char",2,1980,"ho","What is the hotel in The Shining called?",["The Overlook Hotel","Bates Motel","The Stanley Hotel","The Grand Budapest"],"The real Stanley Hotel in Colorado inspired Stephen King's novel.");
+Q("char",2,2014,"co","Who is the concierge in The Grand Budapest Hotel?",["Monsieur Gustave H.","Zero Moustafa","Dmitri","Deputy Kovacs"],"Ralph Fiennes plays Gustave. The film won four Oscars, all for craft categories.");
+Q("char",2,1942,"ro,dr","In Casablanca, what is Rick's nightclub called?",["Rick's Café Américain","The Blue Parrot","Café Casablanca","Le Rendez-vous"],"The Blue Parrot is a real club in the film, run by Rick's rival Ferrari.");
+Q("char",3,1941,"dr","What is 'Rosebud' in Citizen Kane?",["A sled","A horse","A woman","A boat"],"The answer is revealed only in the final shot, as the sled burns.");
+Q("char",2,1968,"sf","What is the computer called in 2001: A Space Odyssey?",["HAL 9000","MU-TH-UR","Skynet","Joshua"],"Each letter of HAL is one before IBM in the alphabet. Clarke and Kubrick said this was a coincidence.");
+Q("char",3,1959,"co","In Some Like It Hot, the two musicians hide by disguising themselves as:",["Members of an all-female band","Nuns","Hotel maids","Nurses"],"The film ends on one of cinema's most famous last lines: 'Nobody's perfect'.");
+Q("char",1,1977,"sf,ac","Who is Luke Skywalker's twin sister?",["Princess Leia","Padmé Amidala","Rey","Mon Mothma"],"The twin reveal comes in Return of the Jedi (1983).");
+Q("char",3,1992,"cr","In Reservoir Dogs, which code name does Steve Buscemi's character complain about?",["Mr. Pink","Mr. Brown","Mr. Blonde","Mr. Orange"],"Tarantino himself plays Mr. Brown.");
+Q("char",1,1978,"ho","Which masked killer stalks Haddonfield in Halloween (1978)?",["Michael Myers","Jason Voorhees","Freddy Krueger","Leatherface"],"The mask was a cheap Captain Kirk mask, painted white.");
+Q("char",2,1975,"co,fa","In Monty Python and the Holy Grail, what do the knights use instead of horses?",["Coconut halves, banged together","Broomsticks","Pantomime horses","Bicycles"],"The joke grew partly out of the film's tiny budget.");
+
+/* ---- Behind the Camera ---- */
+Q("craft",1,0,"","What is a cinematographer also commonly called?",["Director of photography","Gaffer","Key grip","Line producer"],"The gaffer is the chief lighting technician, and the key grip runs the crew that moves cameras and rigging.");
+Q("craft",1,0,"","What is a MacGuffin?",["An object that drives the plot but matters little in itself","A type of camera crane","The final shot before the credits","A scene's last line of dialogue"],"Hitchcock popularised the term. The briefcase in Pulp Fiction is often cited as a modern example.");
+Q("craft",1,0,"","What does a Foley artist do?",["Recreates everyday sound effects in sync with the picture","Grades the colour of the film","Tracks continuity between takes","Designs the title sequence"],"The craft is named after Jack Foley, who developed it at Universal in the early sound era.");
+Q("craft",2,0,"","What is a Dutch angle?",["A shot with the camera tilted on its axis","A shot looking straight down from above","A zoom combined with a dolly move","A shot framed through a doorway"],"'Dutch' probably comes from 'Deutsch': German Expressionist films used tilted frames to show unease.");
+Q("craft",2,1958,"th","The dolly zoom became famous through which Hitchcock film?",["Vertigo","Rear Window","The Birds","North by Northwest"],"It is often called the Vertigo effect. Spielberg used it on Chief Brody's face in Jaws.");
+Q("craft",2,0,"","What is the standard projection speed for sound film?",["24 frames per second","18 frames per second","30 frames per second","48 frames per second"],"24 fps became standard with sound in the late 1920s. The Hobbit was shot and shown at 48 fps in some cinemas.");
+Q("craft",2,1941,"dr","Citizen Kane's deep-focus photography was shot by:",["Gregg Toland","Gordon Willis","Sven Nykvist","James Wong Howe"],"Welles gave Toland a title card shared with his own, an unusual honour for a cinematographer.");
+Q("craft",2,0,"","What does ADR stand for in post-production?",["Automated dialogue replacement","Audio direct recording","Advanced digital rendering","Actor delivery rehearsal"],"Actors re-record lines in a studio while watching the scene. It is also called looping.");
+Q("craft",2,2015,"ac,dr","Emmanuel Lubezki won his third Oscar in a row for which film, shot almost entirely in natural light?",["The Revenant","Birdman","Gravity","Mad Max: Fury Road"],"His three straight wins were for Gravity, Birdman and The Revenant.");
+Q("craft",2,0,"","What is a match cut?",["A cut joining two shots linked by shape or movement","A cut made to hide a mistake","Two cameras filming the same action","A slow fade between scenes"],"The cut from a thrown bone to an orbiting satellite in 2001 is the most famous example.");
+Q("craft",3,0,"","Which aspect ratio is known as the Academy ratio?",["1.37:1","1.85:1","2.39:1","1.66:1"],"The Academy standardised it in 1932 to make room for the optical soundtrack on the film strip.");
+Q("craft",3,1972,"cr","Cinematographer Gordon Willis, who shot The Godfather, was nicknamed:",["The Prince of Darkness","The Painter of Light","The Magician","The Iceman"],"Fellow cinematographer Conrad Hall gave him the name for his deep shadows.");
+Q("craft",3,1958,"cr,th","The opening single take of Touch of Evil (1958) lasts about:",["3 minutes","30 seconds","10 minutes","20 minutes"],"The shot follows a car bomb through the border town before it explodes. Altman's The Player opens with a nod to it.");
+Q("craft",3,1935,"dr","Which was the first full-length live-action feature made in three-strip Technicolor?",["Becky Sharp","The Wizard of Oz","Gone with the Wind","The Adventures of Robin Hood"],"Becky Sharp came out in 1935, four years before The Wizard of Oz.");
+Q("craft",2,0,"","What is 'day for night'?",["Shooting in daylight and darkening the image to look like night","Shooting overnight to save money","A night scene lit by car headlights","Editing day and night scenes in parallel"],"Truffaut named a 1973 film about filmmaking after it: La Nuit américaine, released in English as Day for Night.");
+Q("craft",3,1953,"","Which widescreen process did 20th Century Fox launch with The Robe (1953)?",["CinemaScope","VistaVision","Cinerama","Todd-AO"],"Studios pushed widescreen to give audiences something television could not.");
+
+/* ---- Score & Sound ---- */
+Q("sound",1,1977,"sf,ac","Who composed the score for Star Wars (1977)?",["John Williams","Hans Zimmer","Jerry Goldsmith","Howard Shore"],"Williams has received more than 50 Oscar nominations, more than any other living person.");
+Q("sound",1,2010,"sf,th","Which composer scored both Inception and Interstellar?",["Hans Zimmer","Ludwig Göransson","Trent Reznor","Clint Mansell"],"Interstellar's score leans on a church organ, recorded in London's Temple Church.");
+Q("sound",1,1961,"ro,co","The song Moon River was introduced in which film?",["Breakfast at Tiffany's","Roman Holiday","Funny Face","Sabrina"],"Henry Mancini and Johnny Mercer won the Oscar for Best Original Song with it.");
+Q("sound",1,1975,"th","Which film's menacing two-note theme signals an approaching shark?",["Jaws","The Abyss","Deep Blue Sea","Piranha"],"John Williams won his second Oscar for the Jaws score.");
+Q("sound",2,1966,"we","Ennio Morricone is best known for scoring the westerns of which director?",["Sergio Leone","John Ford","Howard Hawks","Sam Peckinpah"],"Morricone won his first competitive Oscar at 87, for Tarantino's The Hateful Eight.");
+Q("sound",2,1960,"ho","Bernard Herrmann's shrieking strings accompany the shower scene in:",["Psycho","Vertigo","Taxi Driver","Cape Fear"],"Herrmann scored all four films, but only Psycho uses strings alone. Hitchcock first wanted the shower scene silent.");
+Q("sound",2,1927,"mu","The Jazz Singer (1927) is famous as:",["The first feature with synchronised dialogue sequences","The first colour feature","The first Best Picture winner","The first feature with an orchestral score"],"Most of it is silent with title cards. The synchronised songs and a few spoken lines made the sensation.");
+Q("sound",2,2010,"dr","Who composed the score for The Social Network?",["Trent Reznor and Atticus Ross","Daft Punk","Jonny Greenwood","Cliff Martinez"],"Their score won the Oscar for Best Original Score. It was their first feature score for David Fincher.");
+Q("sound",2,2019,"cr,dr","Hildur Guðnadóttir won the Oscar for Best Original Score for:",["Joker","Arrival","Sicario: Day of the Soldado","Tár"],"A few months earlier she had won an Emmy for the HBO series Chernobyl.");
+Q("sound",3,2001,"ro,co","Who composed the music for Amélie (2001)?",["Yann Tiersen","Alexandre Desplat","Michel Legrand","Gabriel Yared"],"Much of the soundtrack came from Tiersen's existing albums, which the director had been listening to.");
+Q("sound",3,2007,"dr","Jonny Greenwood, composer of There Will Be Blood, plays in which band?",["Radiohead","Muse","Portishead","Massive Attack"],"His score was ruled ineligible for the Oscar because it reused music he had written earlier.");
+Q("sound",3,2001,"fa,ac","Who composed the music for The Lord of the Rings trilogy?",["Howard Shore","James Horner","Danny Elfman","Alan Silvestri"],"Shore won three Oscars for the trilogy, including Best Original Song for 'Into the West'.");
+Q("sound",3,0,"","In film sound, what does 'diegetic' mean?",["Sound that exists inside the story world","Sound added in post-production","Music written for the film","A narrator's voice-over"],"A radio playing in a scene is diegetic. The orchestral score the characters cannot hear is non-diegetic.");
+Q("sound",1,1965,"mu,ro","Which musical features the song 'Do-Re-Mi'?",["The Sound of Music","Mary Poppins","My Fair Lady","Oliver!"],"Julie Andrews had starred in Mary Poppins the year before and won Best Actress for it.");
+Q("sound",2,1952,"mu,co","Gene Kelly dances through a downpour in which film?",["Singin' in the Rain","An American in Paris","On the Town","Top Hat"],"Its story is set during Hollywood's chaotic switch from silent films to sound.");
+Q("sound",2,2016,"mu,ro","Who composed the score for La La Land?",["Justin Hurwitz","Damien Chazelle","Benj Pasek","Marc Shaiman"],"Hurwitz and director Damien Chazelle met as students at Harvard. The score won the Oscar.");
+Q("sound",2,1982,"sf","Who composed the electronic score for Blade Runner?",["Vangelis","Jean-Michel Jarre","Tangerine Dream","Hans Zimmer"],"Earlier the same year, Vangelis had won the Oscar for Chariots of Fire.");
+Q("sound",3,1984,"sf,ac","Who composed the electronic score for The Terminator (1984)?",["Brad Fiedel","Vangelis","Giorgio Moroder","John Carpenter"],"Fiedel came back to score Terminator 2: Judgment Day.");
+Q("sound",3,1978,"ho","Who composed the piano theme of Halloween (1978)?",["John Carpenter","Goblin","Bernard Herrmann","Mike Oldfield"],"Carpenter directed the film and scored many of his own movies.");
+
+/* ---- Film History ---- */
+Q("hist",1,1937,"an,fa","Which studio made Snow White and the Seven Dwarfs (1937)?",["Walt Disney Productions","Warner Bros.","Fleischer Studios","MGM"],"Hollywood called it 'Disney's Folly' during production. It became one of the biggest hits of its era.");
+Q("hist",1,1914,"co","Which silent star was famous as 'The Tramp'?",["Charlie Chaplin","Buster Keaton","Harold Lloyd","Stan Laurel"],"Chaplin first played the Tramp in 1914 and kept him on screen for more than 20 years.");
+Q("hist",1,1995,"an","What was Pixar's first feature film?",["Toy Story","A Bug's Life","Monsters, Inc.","Finding Nemo"],"Toy Story (1995) was the first feature made entirely with computer animation.");
+Q("hist",2,1895,"","The Lumière brothers' first public paid screening in 1895 took place in which city?",["Paris","Lyon","Berlin","London"],"It was held in the basement of the Grand Café on the Boulevard des Capucines on 28 December 1895.");
+Q("hist",2,1902,"sf","Which 1902 Georges Méliès film shows a rocket landing in the Moon's eye?",["A Trip to the Moon","The Great Train Robbery","Nosferatu","Metropolis"],"Méliès was a stage magician, and he brought illusion tricks to film.");
+Q("hist",2,1927,"sf","Who directed Metropolis (1927)?",["Fritz Lang","F. W. Murnau","Robert Wiene","G. W. Pabst"],"Much of the original cut was lost for decades, until a near-complete print turned up in Buenos Aires in 2008.");
+Q("hist",2,1903,"we","Which 1903 film is an early landmark of the western?",["The Great Train Robbery","The Birth of a Nation","Intolerance","Greed"],"Its final shot, a bandit firing straight at the audience, could be shown at the start or the end.");
+Q("hist",2,1968,"","What replaced the Hays Code in Hollywood in 1968?",["The MPAA film rating system","A federal censorship board","Long-term star contracts","The Paramount Decree"],"The Paramount Decree came 20 years earlier, in 1948, and forced studios to sell their cinema chains.");
+Q("hist",2,0,"","Which studio's logo features a roaring lion?",["MGM","Paramount","Columbia","Universal"],"Several different lions have played 'Leo' since the 1920s.");
+Q("hist",3,1929,"","In what year were the first Academy Awards presented?",["1929","1927","1933","1939"],"The ceremony lasted about 15 minutes. Wings won the top prize.");
+Q("hist",3,1959,"","Most French New Wave directors started as critics for which magazine?",["Cahiers du cinéma","Positif","Sight and Sound","Film Comment"],"André Bazin co-founded Cahiers in 1951. Truffaut, Godard, Rohmer and Chabrol all wrote for it.");
+Q("hist",3,1998,"dr","Lars von Trier launched the Dogme 95 manifesto with which director?",["Thomas Vinterberg","Susanne Bier","Nicolas Winding Refn","Bille August"],"Vinterberg's Festen (1998) was the first Dogme film.");
+Q("hist",3,1925,"wa,dr","Battleship Potemkin's massacre on the steps is set in which city?",["Odesa","Sevastopol","St Petersburg","Moscow"],"Brian De Palma restaged the falling pram in The Untouchables.");
+Q("hist",2,1928,"an,co","Which 1928 cartoon made Mickey Mouse a star with synchronised sound?",["Steamboat Willie","Plane Crazy","The Skeleton Dance","Flowers and Trees"],"Steamboat Willie entered the US public domain in 2024.");
+Q("hist",3,1915,"wa,dr","Which 1915 D. W. Griffith epic is now notorious for glorifying the Ku Klux Klan?",["The Birth of a Nation","Intolerance","Broken Blossoms","Way Down East"],"Its racism drew protests from the NAACP when it was released.");
+Q("hist",3,1950,"","What was the Hollywood blacklist?",["A ban on film workers accused of Communist ties","A list of films banned abroad","Studios' list of unreliable stars","A tax penalty for foreign films"],"Dalton Trumbo wrote Roman Holiday while blacklisted, credited under another writer's name.");
+Q("hist",2,2023,"","In 2023, Hollywood writers went on strike at the same time as which union?",["SAG-AFTRA, the actors' union","The Teamsters","IATSE, the crew union","The Directors Guild"],"It was the first time writers and actors had struck together since 1960.");
+
+/* ---- Awards & Festivals ---- */
+Q("award",1,0,"","What is the top prize at the Cannes Film Festival?",["Palme d'Or","Golden Lion","Golden Bear","Golden Leopard"],"The Golden Lion is Venice's top prize, the Golden Bear Berlin's and the Golden Leopard Locarno's.");
+Q("award",1,0,"","In which country are the BAFTAs presented?",["United Kingdom","United States","Australia","Canada"],"BAFTA stands for the British Academy of Film and Television Arts.");
+Q("award",1,0,"","What is the Academy Award statuette nicknamed?",["Oscar","Emmy","Tony","César"],"The César is France's national film award, named after the sculptor who designed it.");
+Q("award",2,0,"","What is the top prize at the Venice Film Festival?",["Golden Lion","Palme d'Or","Golden Bear","Crystal Globe"],"Venice is the oldest film festival in the world, first held in 1932.");
+Q("award",2,0,"","What is the top prize at the Berlin International Film Festival?",["Golden Bear","Golden Lion","Golden Shell","Golden Peacock"],"The bear comes from Berlin's coat of arms.");
+Q("award",2,2001,"an,co","Which film won the first Oscar for Best Animated Feature?",["Shrek","Monsters, Inc.","Jimmy Neutron: Boy Genius","Spirited Away"],"Shrek won at the 2002 ceremony against Monsters, Inc. and Jimmy Neutron.");
+Q("award",2,2016,"dr","La La Land was wrongly announced as Best Picture. Which film had actually won?",["Moonlight","Hidden Figures","Manchester by the Sea","Arrival"],"The presenters had been handed the wrong envelope, for Best Actress.");
+Q("award",2,2003,"fa,ac","Which film won every one of the 11 Oscars it was nominated for?",["The Lord of the Rings: The Return of the King","Titanic","Ben-Hur","West Side Story"],"Titanic and Ben-Hur also won 11 Oscars, but each lost in other categories.");
+Q("award",2,2022,"sf,co","How many Oscars did Everything Everywhere All at Once win?",["7","5","9","11"],"It won Best Picture, Director, Actress, Supporting Actor, Supporting Actress, Original Screenplay and Editing.");
+Q("award",3,0,"","Who has won the most Oscars of any individual?",["Walt Disney","John Williams","Edith Head","Cedric Gibbons"],"Disney won 22 competitive Oscars and four honorary ones.");
+Q("award",3,0,"","Which country's films have won the most Oscars for Best International Feature?",["Italy","France","Japan","Spain"],"Fellini alone directed four of Italy's winners.");
+Q("award",3,0,"","The Sundance Film Festival is closely tied to which actor?",["Robert Redford","Paul Newman","Clint Eastwood","Jack Nicholson"],"The name comes from Redford's role as the Sundance Kid.");
+Q("award",3,1955,"ro,dr","Which film won the first Palme d'Or under that name, in 1955?",["Marty","On the Waterfront","The Seventh Seal","La Strada"],"Marty also won Best Picture, a double that Parasite repeated in 2019 and 2020.");
+Q("award",3,2001,"dr","Who was the first Black woman to win Best Actress?",["Halle Berry","Viola Davis","Whoopi Goldberg","Hattie McDaniel"],"Hattie McDaniel was the first Black person to win any Oscar, as Best Supporting Actress for Gone with the Wind.");
+Q("award",2,2020,"dr","Chloé Zhao won Best Director for which film?",["Nomadland","The Rider","Eternals","Hamnet"],"Nomadland also won Best Picture, and Frances McDormand won her third Best Actress Oscar.");
+Q("award",3,1934,"ro,co","Which film was the first to win all five major Oscars: Picture, Director, Actor, Actress and Screenplay?",["It Happened One Night","Gone with the Wind","Casablanca","All About Eve"],"Only One Flew Over the Cuckoo's Nest and The Silence of the Lambs have matched it since.");
+Q("award",3,1950,"dr","Which 1950 film shares the record of 14 Oscar nominations with Titanic and La La Land?",["All About Eve","Sunset Boulevard","Ben-Hur","Gone with the Wind"],"All About Eve won six, including Best Picture.");
+
+/* ---- World Cinema ---- */
+Q("world",1,0,"","Bollywood, the Hindi-language film industry, is based mainly in which city?",["Mumbai","Delhi","Chennai","Kolkata"],"The name blends Bombay, the city's former name, with Hollywood.");
+Q("world",1,0,"","Studio Ghibli is based in which country?",["Japan","South Korea","China","France"],"Ghibli was founded in 1985 by Hayao Miyazaki, Isao Takahata and producer Toshio Suzuki.");
+Q("world",1,0,"","'Nollywood' refers to the film industry of which country?",["Nigeria","Ghana","Kenya","South Africa"],"By number of films made, Nollywood is one of the largest film industries in the world.");
+Q("world",2,2000,"ac,fa","Who directed Crouching Tiger, Hidden Dragon?",["Ang Lee","Zhang Yimou","John Woo","Wong Kar-wai"],"It became the highest-grossing foreign-language film in US history at the time.");
+Q("world",2,2001,"ro,co","Amélie is set mainly in which part of Paris?",["Montmartre","Le Marais","Saint-Germain-des-Prés","Belleville"],"The Café des Deux Moulins, where Amélie works, is a real café in Montmartre.");
+Q("world",2,2006,"fa,wa","Who directed Pan's Labyrinth?",["Guillermo del Toro","Alfonso Cuarón","Alejandro G. Iñárritu","Pedro Almodóvar"],"The film is set in Spain in 1944, after the civil war.");
+Q("world",2,2002,"cr","City of God (2002) is set in which city?",["Rio de Janeiro","São Paulo","Buenos Aires","Bogotá"],"Many of the cast came from Rio's favelas and were trained in workshops before filming.");
+Q("world",2,1987,"sf,ac","Which Dutch director made RoboCop and Basic Instinct?",["Paul Verhoeven","Anton Corbijn","Dick Maas","Jan de Bont"],"Before Hollywood, Verhoeven made Turkish Delight and Soldier of Orange in the Netherlands.");
+Q("world",3,2011,"dr","Who directed the Iranian drama A Separation (2011)?",["Asghar Farhadi","Abbas Kiarostami","Jafar Panahi","Mohsen Makhmalbaf"],"It was the first Iranian film to win the Oscar for Best Foreign Language Film.");
+Q("world",3,1955,"dr","In which language is Satyajit Ray's Pather Panchali (1955)?",["Bengali","Tamil","Malayalam","Marathi"],"It opens the Apu Trilogy. Ray received an honorary Oscar in 1992.");
+Q("world",3,1957,"dr,fa","Who directed The Seventh Seal, where a knight plays chess with Death?",["Ingmar Bergman","Carl Theodor Dreyer","Lars von Trier","Aki Kaurismäki"],"Max von Sydow plays the knight.");
+Q("world",3,0,"","Pedro Almodóvar emerged from the post-Franco Movida scene of which city?",["Madrid","Barcelona","Seville","Valencia"],"La Movida Madrileña was a burst of art, music and nightlife in the years after 1975.");
+Q("world",3,1997,"dr","Which Dutch film won the Oscar for Best Foreign Language Film in 1998?",["Character (Karakter)","Black Book","Turkish Delight","Soldier of Orange"],"Mike van Diem's Character followed Antonia's Line, which had won two years earlier.");
+Q("world",2,2003,"th,cr","Which South Korean director made Oldboy (2003)?",["Park Chan-wook","Bong Joon-ho","Kim Ki-duk","Na Hong-jin"],"Oldboy won the Grand Prix, second prize, at Cannes in 2004.");
+Q("world",2,1960,"dr","Who directed La Dolce Vita (1960)?",["Federico Fellini","Michelangelo Antonioni","Pier Paolo Pasolini","Luchino Visconti"],"Anita Ekberg wading into the Trevi Fountain became one of the defining images of Rome.");
+Q("world",3,2001,"dr,ro","Which Mexican director made Y Tu Mamá También (2001)?",["Alfonso Cuarón","Alejandro G. Iñárritu","Guillermo del Toro","Carlos Reygadas"],"Cuarón later won Best Director twice, for Gravity and Roma.");
+Q("world",2,2022,"ac,mu","Naatu Naatu, from the Indian film RRR, won which award?",["The Oscar for Best Original Song","The Palme d'Or","The Golden Bear","The BAFTA for Best Film"],"It was the first song from an Indian production to win that Oscar.");
+Q("world",3,1993,"dr","Kieślowski's Three Colours trilogy (Blue, White, Red) takes its colours from which flag?",["France","Poland","Italy","Germany"],"Each film loosely follows one ideal of the French motto: liberty, equality, fraternity.");
+Q("world",2,2006,"dr,th","The Lives of Others (2006) is set in:",["East Berlin","Prague","Warsaw","Budapest"],"It follows a Stasi officer spying on a playwright, and won the Oscar for Best Foreign Language Film.");
+
+/* ---- Animation ---- */
+Q("anim",1,1994,"an,dr","In The Lion King (1994), what is Simba's father called?",["Mufasa","Scar","Rafiki","Zazu"],"James Earl Jones voiced Mufasa in both the 1994 film and the 2019 remake.");
+Q("anim",1,2003,"an,co","What kind of fish is Nemo?",["Clownfish","Blue tang","Angelfish","Pufferfish"],"Dory is a blue tang, voiced by Ellen DeGeneres.");
+Q("anim",1,2013,"an,mu","Which song from Frozen won the Oscar for Best Original Song?",["Let It Go","Do You Want to Build a Snowman?","For the First Time in Forever","Love Is an Open Door"],"With it, co-writer Robert Lopez completed the 'EGOT': an Emmy, Grammy, Oscar and Tony.");
+Q("anim",1,2001,"an,co","In Shrek, which animal is Shrek's talkative sidekick?",["A donkey","A cat","A dragon","A gingerbread man"],"Eddie Murphy voices Donkey.");
+Q("anim",2,2008,"an,sf","In WALL-E, what is the sleek robot sent to Earth called?",["EVE","AUTO","M-O","BURN-E"],"The film's first act has almost no spoken dialogue.");
+Q("anim",2,1988,"an,fa","Who directed My Neighbor Totoro (1988)?",["Hayao Miyazaki","Isao Takahata","Mamoru Oshii","Katsuhiro Otomo"],"It was first released on a double bill with Takahata's Grave of the Fireflies.");
+Q("anim",2,2018,"an,ac","Which Oscar-winning animated film introduced Miles Morales to cinema?",["Spider-Man: Into the Spider-Verse","Incredibles 2","Isle of Dogs","Ralph Breaks the Internet"],"Its animators layered comic-book dots and line work over 3D animation.");
+Q("anim",2,2009,"an,co","In Up (2009), how does Carl lift his house into the sky?",["With thousands of balloons","With a hot-air engine","With a giant kite","With a rocket"],"Up was the first animated film to open the Cannes Film Festival.");
+Q("anim",2,2004,"an,ac","Who directed The Incredibles?",["Brad Bird","Pete Docter","Andrew Stanton","John Lasseter"],"Bird also voices the costume designer Edna Mode.");
+Q("anim",3,1988,"an,sf","Akira (1988) is set in a future version of which city?",["Tokyo","Osaka","Kyoto","Seoul"],"Katsuhiro Otomo adapted and directed his own manga.");
+Q("anim",3,1993,"an,fa","Who directed The Nightmare Before Christmas?",["Henry Selick","Tim Burton","Mike Johnson","Nick Park"],"Tim Burton conceived the story and produced it, but Henry Selick directed the stop-motion.");
+Q("anim",3,2000,"an,co","Aardman's Chicken Run (2000) was co-directed by Peter Lord and:",["Nick Park","Henry Selick","Brad Bird","Sylvain Chomet"],"Nick Park also created Wallace and Gromit.");
+
+/* ---- Franchises & Sequels ---- */
+Q("fran",1,1977,"sf,ac","What was Darth Vader's name before he turned to the dark side?",["Anakin Skywalker","Luke Skywalker","Obi-Wan Kenobi","Ben Solo"],"James Earl Jones voiced Vader, while David Prowse wore the suit.");
+Q("fran",1,1962,"ac,th","Which actor played James Bond in the first Eon Bond film, Dr. No (1962)?",["Sean Connery","Roger Moore","George Lazenby","David Niven"],"David Niven played Bond in the unofficial 1967 spoof Casino Royale.");
+Q("fran",1,2008,"ac,sf","Which film launched the Marvel Cinematic Universe?",["Iron Man","The Incredible Hulk","Thor","Captain America: The First Avenger"],"Its post-credits scene with Samuel L. Jackson as Nick Fury set the pattern for the series.");
+Q("fran",2,1985,"sf,co","In Back to the Future, what speed must the DeLorean reach to travel in time?",["88 mph","77 mph","99 mph","121 mph"],"It also needs 1.21 gigawatts of power, first supplied by plutonium.");
+Q("fran",2,1981,"ac","What is Indiana Jones afraid of?",["Snakes","Spiders","Heights","Rats"],"Tom Selleck was the first choice for Indy but could not get out of his Magnum, P.I. contract.");
+Q("fran",2,1984,"sf,ac","Who directed The Terminator and Terminator 2?",["James Cameron","John McTiernan","Paul Verhoeven","Ridley Scott"],"Terminator 2 was one of the first films with a major computer-generated character.");
+Q("fran",2,2001,"fa","How many Harry Potter films were made from the seven books?",["8","7","9","10"],"The final book, Deathly Hallows, was split into two films.");
+Q("fran",3,1988,"ac,th","Who played Hans Gruber in Die Hard (1988)?",["Alan Rickman","Jeremy Irons","Gary Oldman","Christopher Walken"],"It was Rickman's first feature film role.");
+Q("fran",2,2015,"ac,sf","Who directed Mad Max: Fury Road (2015)?",["George Miller","Zack Snyder","Neill Blomkamp","Denis Villeneuve"],"Miller had directed the first Mad Max in 1979, 36 years earlier.");
+Q("fran",3,1974,"cr,dr","The Godfather Part II was the first sequel to win which award?",["Best Picture","The Palme d'Or","The Golden Lion","Best Actor"],"The Lord of the Rings: The Return of the King repeated the feat in 2004.");
+Q("fran",3,1996,"ac,th","Who directed the first Mission: Impossible film (1996)?",["Brian De Palma","John Woo","J. J. Abrams","Christopher McQuarrie"],"The first three films each had a different director: De Palma, John Woo and J. J. Abrams.");
+
+/* ---- Book to Screen ---- */
+Q("adapt",1,1993,"sf,ac","Jurassic Park is based on a novel by:",["Michael Crichton","Stephen King","Dean Koontz","Tom Clancy"],"Crichton co-wrote the screenplay.");
+Q("adapt",1,1980,"ho","The Shining (1980) is based on a novel by:",["Stephen King","Peter Straub","Anne Rice","Shirley Jackson"],"King disliked Kubrick's version and later made his own TV miniseries of it.");
+Q("adapt",1,2001,"fa,ac","Who wrote The Lord of the Rings?",["J. R. R. Tolkien","C. S. Lewis","Terry Pratchett","George R. R. Martin"],"Peter Jackson filmed all three parts back to back in New Zealand.");
+Q("adapt",2,1972,"cr,dr","Who wrote the novel The Godfather?",["Mario Puzo","Gay Talese","Elmore Leonard","Dashiell Hammett"],"Puzo co-wrote the screenplays with Francis Ford Coppola.");
+Q("adapt",2,1994,"dr","The Shawshank Redemption is adapted from a novella by:",["Stephen King","John Grisham","Michael Connelly","Truman Capote"],"The novella is called Rita Hayworth and Shawshank Redemption.");
+Q("adapt",2,1939,"ro,wa","Gone with the Wind is based on the novel by:",["Margaret Mitchell","Harper Lee","Pearl S. Buck","Edna Ferber"],"It was the only novel Mitchell published in her lifetime.");
+Q("adapt",2,1991,"th,ho","The Silence of the Lambs is based on a novel by:",["Thomas Harris","Patricia Highsmith","James Ellroy","Robert Bloch"],"It is one of only three films to win all five major Oscars.");
+Q("adapt",2,2014,"th","Gone Girl (2014) was adapted for the screen by the novel's own author. Who?",["Gillian Flynn","Paula Hawkins","Tana French","Liane Moriarty"],"Flynn wrote the screenplay for David Fincher's film.");
+Q("adapt",3,1962,"dr,cr","Who played Atticus Finch in To Kill a Mockingbird (1962)?",["Gregory Peck","James Stewart","Henry Fonda","Spencer Tracy"],"Peck won Best Actor. Harper Lee gave him her late father's pocket watch.");
+Q("adapt",3,1982,"sf","Blade Runner is adapted from which Philip K. Dick novel?",["Do Androids Dream of Electric Sheep?","The Man in the High Castle","Ubik","A Scanner Darkly"],"Dick died a few months before the film's release, after seeing some early footage.");
+Q("adapt",3,2007,"cr,th","No Country for Old Men is based on a novel by:",["Cormac McCarthy","Don DeLillo","Larry McMurtry","Elmore Leonard"],"McCarthy also wrote The Road, filmed in 2009.");
+Q("adapt",3,1975,"dr","One Flew Over the Cuckoo's Nest is based on the novel by:",["Ken Kesey","Jack Kerouac","Joseph Heller","Kurt Vonnegut"],"Jack Nicholson won his first Oscar playing McMurphy.");
+
+/* ---- Box Office & Business ---- */
+Q("biz",1,0,"","Which streaming company started out renting DVDs by mail?",["Netflix","Hulu","Amazon Prime Video","Mubi"],"Netflix mailed its first DVDs in 1998 and started streaming in 2007.");
+Q("biz",2,1975,"th","Which 1975 film is often called the first summer blockbuster?",["Jaws","Star Wars","The Exorcist","Rocky"],"It opened on hundreds of screens at once, backed by national TV advertising, which was new for the time.");
+Q("biz",2,1999,"ho","Which 1999 horror film became a hit on a tiny budget and an online campaign that presented it as real?",["The Blair Witch Project","Paranormal Activity","The Sixth Sense","Scream"],"Its website treated the three filmmakers as genuinely missing.");
+Q("biz",2,0,"","Which studio did Disney buy in 2019, gaining Avatar and The Simpsons?",["20th Century Fox","Paramount","Lionsgate","MGM"],"Disney renamed it 20th Century Studios in 2020.");
+Q("biz",2,0,"","Which company bought MGM in 2022?",["Amazon","Apple","Netflix","Sony"],"The deal was worth about 8.5 billion dollars.");
+Q("biz",2,0,"","In the US, a film's 'opening weekend' normally covers which days?",["Friday to Sunday","Thursday to Saturday","Saturday and Sunday","Monday to Sunday"],"Thursday-evening previews are usually counted in the Friday figure.");
+Q("biz",3,0,"","What is a 'four-quadrant film'?",["A film aimed at men and women, both under and over 25","A film released in four territories at once","A film shot with four cameras","A film financed by four studios"],"Studios use the term for big franchise films meant to appeal to everyone.");
+Q("biz",3,1997,"ro,dr","Titanic (1997) was the first film to pass which worldwide box-office mark?",["1 billion dollars","500 million dollars","3 billion dollars","100 million dollars"],"It held the all-time record until Avatar, also directed by James Cameron, passed it.");
+Q("biz",3,2016,"dr","Which was A24's first Best Picture winner?",["Moonlight","Lady Bird","Room","Ex Machina"],"A24 won Best Picture again with Everything Everywhere All at Once.");
+Q("biz",3,0,"","In film financing, what is a completion bond?",["A guarantee that a film will be finished and delivered","A bonus for finishing on schedule","A loan repaid from box-office takings","A contract for a sequel"],"If a production runs badly over budget, the bond company can step in and take control.");
+
+
+/* ---- Shared Screen: three actors, one film ---- */
+Q("cast",1,1995,"an,co","Which film features the voices of Tom Hanks, Tim Allen and Don Rickles?",["Toy Story","Cars","Monsters, Inc.","Shrek"],"Don Rickles voiced Mr. Potato Head in all of the Toy Story films made in his lifetime.");
+Q("cast",1,1997,"ro,dr","Which film stars Leonardo DiCaprio, Kate Winslet and Billy Zane?",["Titanic","Revolutionary Road","The Beach","Romeo + Juliet"],"DiCaprio and Winslet reunited eleven years later in Revolutionary Road, without Zane.");
+Q("cast",1,1977,"sf,ac","Which 1977 film stars Mark Hamill, Harrison Ford and Carrie Fisher?",["Star Wars","Blade Runner","Raiders of the Lost Ark","Indiana Jones and the Temple of Doom"],"Ford had been working as a carpenter when George Lucas cast him as Han Solo.");
+Q("cast",1,1999,"sf,ac","Which 1999 film stars Keanu Reeves, Laurence Fishburne and Carrie-Anne Moss?",["The Matrix","John Wick","Speed","Constantine"],"Fishburne joined Reeves again years later in the John Wick sequels.");
+Q("cast",1,1993,"sf,ac","Which 1993 film stars Sam Neill, Laura Dern and Jeff Goldblum?",["Jurassic Park","The Fly","Event Horizon","Wild at Heart"],"All three returned for Jurassic World Dominion in 2022.");
+Q("cast",2,1995,"cr,ac","Which film brought together Al Pacino, Robert De Niro and Val Kilmer?",["Heat","The Irishman","Righteous Kill","Top Gun"],"Pacino and De Niro share only a couple of scenes, including the famous diner conversation.");
+Q("cast",2,1999,"dr,th","Which film stars Brad Pitt, Edward Norton and Helena Bonham Carter?",["Fight Club","Se7en","12 Monkeys","Primal Fear"],"Director David Fincher had worked with Pitt four years earlier on Se7en.");
+Q("cast",2,1980,"ho","Which film stars Jack Nicholson, Shelley Duvall and Scatman Crothers?",["The Shining","One Flew Over the Cuckoo's Nest","Popeye","Chinatown"],"Crothers had also acted with Nicholson in One Flew Over the Cuckoo's Nest, but Duvall was not in it.");
+Q("cast",2,1942,"ro,dr","Which film stars Humphrey Bogart, Ingrid Bergman and Claude Rains?",["Casablanca","Notorious","The Maltese Falcon","To Have and Have Not"],"Bergman and Rains were reunited in Hitchcock's Notorious, opposite Cary Grant.");
+Q("cast",2,2003,"dr,ro","Which film stars Bill Murray, Scarlett Johansson and Giovanni Ribisi?",["Lost in Translation","Isle of Dogs","Her","Groundhog Day"],"Sofia Coppola has said she wrote the lead role with Bill Murray in mind.");
+Q("cast",2,1994,"dr","Which film stars Tim Robbins, Morgan Freeman and Bob Gunton?",["The Shawshank Redemption","Se7en","Unforgiven","Mystic River"],"Bob Gunton plays the warden, Samuel Norton.");
+Q("cast",2,1997,"dr","Which film stars Matt Damon, Ben Affleck and Robin Williams?",["Good Will Hunting","Dogma","Chasing Amy","Dead Poets Society"],"Damon and Affleck won the Oscar for Best Original Screenplay, and Williams won Best Supporting Actor.");
+Q("cast",2,1992,"cr","Which film stars Harvey Keitel, Tim Roth and Michael Madsen?",["Reservoir Dogs","Pulp Fiction","The Hateful Eight","Four Rooms"],"Keitel and Roth returned for Pulp Fiction; Roth and Madsen for The Hateful Eight.");
+Q("cast",3,1997,"ac,th","Which film stars John Travolta, Nicolas Cage and Joan Allen?",["Face/Off","Con Air","Broken Arrow","Snake Eyes"],"Directed by John Woo, it has its two leads swap faces, and so swap performances.");
+Q("cast",3,1971,"cr,th","Which film stars Gene Hackman, Fernando Rey and Roy Scheider?",["The French Connection","Jaws","The Conversation","Unforgiven"],"It won Best Picture, and Hackman won Best Actor as Popeye Doyle.");
+Q("cast",3,1998,"co,cr","Which film stars Jeff Bridges, John Goodman and Julianne Moore?",["The Big Lebowski","Barton Fink","The Fisher King","Fargo"],"It underperformed on release, then became one of the great cult films.");
+Q("cast",3,1996,"cr,co","Which film stars Frances McDormand, William H. Macy and Steve Buscemi?",["Fargo","The Big Lebowski","Boogie Nights","Blood Simple"],"McDormand won Best Actress. She is married to co-director Joel Coen.");
+Q("cast",3,1984,"co,fa","Which film stars Sigourney Weaver, Bill Murray and Harold Ramis?",["Ghostbusters","Stripes","Caddyshack","Galaxy Quest"],"Murray and Ramis had already starred together in Stripes, without Weaver.");
+Q("cast",3,1986,"th,cr","Which film stars Kyle MacLachlan, Isabella Rossellini and Dennis Hopper?",["Blue Velvet","Dune","Easy Rider","Wild at Heart"],"MacLachlan had worked with David Lynch two years earlier on Dune.");
+Q("cast",3,1941,"cr,th","Which film stars Peter Lorre, Sydney Greenstreet and Mary Astor?",["The Maltese Falcon","Casablanca","The Big Sleep","M"],"Lorre and Greenstreet turned up together again a year later in Casablanca, without Astor.");
+Q("cast",3,1950,"dr,th","Which film stars Gloria Swanson, William Holden and Erich von Stroheim?",["Sunset Boulevard","Stalag 17","Sabrina","Queen Kelly"],"Von Stroheim had directed Swanson in Queen Kelly, and a clip of it appears in Sunset Boulevard.");
+Q("cast",3,1977,"co,ro","Which 1977 film stars Woody Allen, Diane Keaton and Tony Roberts?",["Annie Hall","Manhattan","Sleeper","Love and Death"],"It won Best Picture over Star Wars.");
+Q("cast",3,2006,"wa,th","Which film stars Carice van Houten, Sebastian Koch and Thom Hoffman?",["Black Book","The Lives of Others","Soldier of Orange","Valkyrie"],"Verhoeven's return to the Netherlands after two decades in Hollywood.");
+Q("cast",4,1979,"ho","Which film stars Klaus Kinski, Isabelle Adjani and Bruno Ganz?",["Nosferatu the Vampyre","Aguirre, the Wrath of God","Wings of Desire","Possession"],"Werner Herzog's remake of Murnau's 1922 silent film.");
+Q("cast",4,1957,"dr,fa","Which film stars Max von Sydow, Gunnar Björnstrand and Bengt Ekerot?",["The Seventh Seal","Wild Strawberries","The Virgin Spring","Persona"],"Bengt Ekerot plays Death, the knight's opponent at chess.");
+Q("cast",4,1950,"cr,dr","Which film stars Toshiro Mifune, Takashi Shimura and Machiko Kyō?",["Rashomon","Seven Samurai","Ugetsu","Yojimbo"],"Rashomon won the Golden Lion in 1951 and opened Western eyes to Japanese cinema.");
+Q("cast",4,1963,"dr","Which film stars Marcello Mastroianni, Anouk Aimée and Claudia Cardinale?",["8½","La Dolce Vita","Lola","The Leopard"],"Mastroianni and Aimée had both been in La Dolce Vita three years earlier, without Cardinale.");
+Q("cast",4,1966,"dr","Which film stars Liv Ullmann, Bibi Andersson and Gunnar Björnstrand?",["Persona","Cries and Whispers","Autumn Sonata","Wild Strawberries"],"It was Liv Ullmann's first film with Ingmar Bergman.");
+Q("cast",4,1977,"wa","Which film stars Rutger Hauer, Jeroen Krabbé and Edward Fox?",["Soldier of Orange","Turkish Delight","The Fourth Man","A Bridge Too Far"],"Paul Verhoeven's Second World War epic was the most expensive Dutch film ever made at the time.");
+Q("cast",5,1960,"cr,ro","Jean-Paul Belmondo, Jean Seberg and director Jean-Pierre Melville all appear in which film?",["Breathless","Pierrot le Fou","Le Samouraï","Bonjour Tristesse"],"Melville makes a cameo as a novelist interviewed at the airport.");
+Q("cast",5,1964,"cr,co","Which Godard film stars Anna Karina, Sami Frey and Claude Brasseur?",["Bande à part","Vivre sa vie","Pierrot le Fou","Alphaville"],"Its dance scene in a café inspired the dance in Pulp Fiction. Tarantino named his company A Band Apart after it.");
+Q("cast",5,1972,"co","Which film stars Fernando Rey, Delphine Seyrig and Stéphane Audran?",["The Discreet Charm of the Bourgeoisie","Last Year at Marienbad","Le Boucher","Viridiana"],"Luis Buñuel's comedy about a dinner party that keeps getting interrupted won the Oscar for Best Foreign Language Film.");
+Q("cast",5,1997,"ro,dr","Which Wong Kar-wai film stars Tony Leung Chiu-wai, Leslie Cheung and Chang Chen?",["Happy Together","Chungking Express","Days of Being Wild","Ashes of Time"],"Wong Kar-wai won Best Director at Cannes for it in 1997.");
+
+/* ---- Cinéphile tier (difficulty 4) ---- */
+Q("act",4,1921,"co","Jackie Coogan, Chaplin's co-star in The Kid (1921), later played which TV role?",["Uncle Fester","Lurch","Grandpa Munster","Herman Munster"],"California's Coogan Act, which protects child actors' earnings, is named after him.");
+Q("craft",4,0,"","What did the Kuleshov effect show?",["Viewers read emotion into a neutral face from the shot beside it","Audiences remember the first and last shots best","Fast cutting raises the heart rate","Colour makes scenes feel shorter"],"Lev Kuleshov cut the same expressionless face against soup, a coffin and a child, and audiences praised the 'acting'.");
+Q("adapt",4,1979,"sf","Tarkovsky's Stalker (1979) is based on Roadside Picnic, a novel by:",["Arkady and Boris Strugatsky","Stanisław Lem","Yevgeny Zamyatin","Mikhail Bulgakov"],"Tarkovsky's earlier Solaris came from Stanisław Lem.");
+Q("dir",4,1928,"dr","Who directed The Passion of Joan of Arc (1928)?",["Carl Theodor Dreyer","Abel Gance","F. W. Murnau","Robert Bresson"],"A complete print of the original cut turned up in 1981 in a psychiatric hospital near Oslo.");
+Q("sound",4,1962,"wa,dr","Who composed the score for Lawrence of Arabia?",["Maurice Jarre","Miklós Rózsa","Dimitri Tiomkin","Max Steiner"],"Jarre won three Oscars, all for David Lean films.");
+Q("act",4,1931,"cr,th","Which actor played the child murderer in Fritz Lang's M (1931)?",["Peter Lorre","Emil Jannings","Conrad Veidt","Gustaf Gründgens"],"He whistles Grieg's In the Hall of the Mountain King, the tune that gives him away.");
+Q("award",4,1928,"dr","Emil Jannings won the first Best Actor Oscar for which two films?",["The Last Command and The Way of All Flesh","The Blue Angel and Faust","The Last Laugh and Variety","Sunrise and Wings"],"He was handed the award before the first ceremony because he was returning to Germany.");
+Q("world",4,1966,"dr","Who directed Black Girl (La Noire de…, 1966)?",["Ousmane Sembène","Djibril Diop Mambéty","Souleymane Cissé","Idrissa Ouédraogo"],"Sembène is often called the father of African cinema.");
+Q("craft",4,0,"","Early sound cameras were wrapped in a soundproof housing called a:",["Blimp","Dolly","Snoot","Flag"],"Before blimps, cameras and operators were shut in soundproof booths nicknamed 'iceboxes'.");
+Q("hist",4,1893,"","What was Thomas Edison's first film studio, built in 1893, called?",["Black Maria","Biograph","Vitagraph","Kinetoscope Parlor"],"It sat on a turntable so it could turn to follow the sun.");
+Q("world",4,1997,"dr","Abbas Kiarostami won the Palme d'Or for which film?",["Taste of Cherry","Close-Up","Where Is the Friend's House?","Certified Copy"],"It shared the prize with Shōhei Imamura's The Eel.");
+Q("sound",4,1949,"th","The zither score of The Third Man was written and played by:",["Anton Karas","Nino Rota","Georges Auric","Malcolm Arnold"],"Director Carol Reed heard him playing in a Vienna wine tavern.");
+Q("char",4,1941,"dr","What is the name of the newspaper Charles Foster Kane runs?",["The Inquirer","The Chronicle","The Globe","The Sentinel"],"Kane takes over the New York Daily Inquirer as a young man and turns it into a populist force.");
+Q("char",4,1958,"th,ro","In Vertigo, what is the name of the woman Scottie is hired to follow?",["Madeleine Elster","Judy Barton","Midge Wood","Carlotta Valdes"],"Kim Novak plays both Madeleine and Judy.");
+Q("craft",4,1958,"th","Who designed the title sequences for Vertigo and Psycho?",["Saul Bass","Maurice Binder","Pablo Ferro","Kyle Cooper"],"Maurice Binder designed the gun-barrel openings of the early Bond films.");
+Q("sound",4,1972,"cr,dr","Why was Nino Rota's score for The Godfather withdrawn from Oscar contention?",["It reused music from his earlier film Fortunella","It was submitted too late","Rota was not an Academy member","Most of it was source music"],"He won the Oscar two years later for The Godfather Part II.");
+Q("act",4,1957,"dr","Which actress starred in La Strada and Nights of Cabiria and was married to Fellini?",["Giulietta Masina","Anna Magnani","Monica Vitti","Silvana Mangano"],"Both films won the Oscar for Best Foreign Language Film.");
+Q("hist",4,1947,"","The Hollywood Ten were jailed for refusing to answer questions from:",["The House Un-American Activities Committee","The Senate Armed Services Committee","The FBI","The Production Code Administration"],"Several of them kept writing under false names during the blacklist.");
+Q("craft",4,1926,"mu","The Vitaphone sound system recorded sound on:",["Discs synchronised with the projector","An optical track on the film","Magnetic tape","Wax cylinders"],"Fox's rival Movietone printed the sound onto the film itself, and that approach won out.");
+Q("award",4,1970,"wa","Which actor refused the Best Actor Oscar for Patton?",["George C. Scott","Marlon Brando","Dustin Hoffman","Jack Nicholson"],"He called the ceremony a 'two-hour meat parade'. Brando refused his own Oscar two years later.");
+Q("anim",4,1926,"an,fa","Lotte Reiniger's The Adventures of Prince Achmed (1926), the oldest surviving animated feature, uses which technique?",["Silhouette cut-out animation","Clay stop-motion","Hand-drawn cels","Pinscreen animation"],"Reiniger cut every figure from card and lit it from below.");
+Q("world",4,1959,"dr","Which film closes Satyajit Ray's Apu Trilogy?",["Apur Sansar (The World of Apu)","Aparajito","Charulata","Jalsaghar"],"Sharmila Tagore made her film debut in it, aged 14.");
+Q("dir",4,1975,"dr","Who directed Jeanne Dielman, 23 quai du Commerce, 1080 Bruxelles, voted greatest film of all time in Sight and Sound's 2022 critics' poll?",["Chantal Akerman","Agnès Varda","Claire Denis","Marguerite Duras"],"It took the top spot from Vertigo, which had led the 2012 poll.");
+Q("world",4,1962,"dr","Agnès Varda's 1962 film following a singer waiting for medical results, in near real time, is:",["Cléo from 5 to 7","Vagabond","Le Bonheur","The Gleaners and I"],"Varda's first feature, La Pointe Courte (1955), is often seen as a forerunner of the French New Wave.");
+Q("hist",4,1896,"","Which early Lumière film is the subject of the famous, probably exaggerated, story of audiences fleeing in panic?",["The Arrival of a Train at La Ciotat","Workers Leaving the Lumière Factory","The Sprinkler Sprinkled","Feeding the Baby"],"Historians have found little contemporary evidence of the stampede.");
+Q("dir",4,1927,"ro,dr","Who directed Sunrise: A Song of Two Humans (1927)?",["F. W. Murnau","Fritz Lang","King Vidor","Frank Borzage"],"Janet Gaynor won the first Best Actress Oscar, partly for her role in it.");
+Q("act",4,1925,"ho","Which silent star was called 'The Man of a Thousand Faces'?",["Lon Chaney","Lon Chaney Jr.","Boris Karloff","Conrad Veidt"],"He designed his own makeup, including the skull face in The Phantom of the Opera (1925).");
+Q("biz",4,1919,"","Which silent star co-founded United Artists in 1919?",["Mary Pickford","Lillian Gish","Gloria Swanson","Clara Bow"],"Her co-founders were Charlie Chaplin, Douglas Fairbanks and D. W. Griffith.");
+Q("craft",4,1966,"dr","Which cinematographer shot Bergman's Persona and Cries and Whispers?",["Sven Nykvist","Gunnar Fischer","Raoul Coutard","Néstor Almendros"],"Nykvist won Oscars for Cries and Whispers and Fanny and Alexander. Gunnar Fischer shot Bergman's 1950s films.");
+Q("hist",4,1929,"","Who made Man with a Movie Camera (1929), a film with no actors and no intertitles?",["Dziga Vertov","Sergei Eisenstein","Vsevolod Pudovkin","Alexander Dovzhenko"],"The cameraman seen on screen is Vertov's brother, Mikhail Kaufman.");
+Q("char",4,1954,"ac,dr","In Seven Samurai, which of the seven is a farmer's son pretending to be a samurai?",["Kikuchiyo","Kambei","Kyūzō","Katsushirō"],"Toshiro Mifune plays Kikuchiyo.");
+Q("dir",4,0,"","Which Portuguese director kept making films after his 100th birthday?",["Manoel de Oliveira","Pedro Costa","Miguel Gomes","João César Monteiro"],"He died in 2015 at 106, still working.");
+Q("biz",3,1980,"we","Which 1980 western's huge losses helped bring down United Artists?",["Heaven's Gate","The Long Riders","Tom Horn","Bronco Billy"],"After the disaster, United Artists was sold to MGM in 1981.");
+Q("hist",3,1939,"ro,wa","Which was the first colour film to win Best Picture?",["Gone with the Wind","The Wizard of Oz","Becky Sharp","An American in Paris"],"The Wizard of Oz was also nominated that year, but lost.");
+
+/* ---- Archivist tier (difficulty 5) ---- */
+Q("hist",5,1888,"","Which 1888 film by Louis Le Prince is often cited as the oldest surviving motion picture?",["Roundhay Garden Scene","Workers Leaving the Lumière Factory","Fred Ott's Sneeze","Monkeyshines"],"Le Prince vanished from a train in 1890, before he could show his invention in public.");
+Q("dir",5,1924,"dr","Who directed Greed (1924), cut by the studio from a version of around eight hours?",["Erich von Stroheim","D. W. Griffith","King Vidor","Rex Ingram"],"The studio released about two hours. The cut footage is believed destroyed.");
+Q("world",5,1969,"dr","Who directed The Colour of Pomegranates (1969)?",["Sergei Parajanov","Andrei Tarkovsky","Otar Iosseliani","Tengiz Abuladze"],"Soviet authorities imprisoned Parajanov for several years in the 1970s.");
+Q("world",5,2004,"dr","Which Filipino director is known for films of eight hours or more, such as Evolution of a Filipino Family?",["Lav Diaz","Brillante Mendoza","Lino Brocka","Kidlat Tahimik"],"His The Woman Who Left won the Golden Lion at Venice in 2016.");
+Q("award",5,1929,"ro,dr","At the first Oscars, which film won the one-off award for 'Unique and Artistic Production'?",["Sunrise","Wings","The Crowd","Seventh Heaven"],"Wings won the other top award, Outstanding Picture. The Academy later counted that one as Best Picture.");
+Q("craft",5,1927,"wa","In Napoléon (1927), Abel Gance used 'Polyvision' to:",["Project three images side by side as a triptych","Add synchronised sound effects","Tint each scene a different colour","Show the film in 3D"],"Historian Kevin Brownlow spent decades restoring the film.");
+Q("world",5,1929,"","Which Dutch filmmaker made the 1929 city documentary Rain (Regen), with Mannus Franken?",["Joris Ivens","Bert Haanstra","Johan van der Keuken","Fons Rademakers"],"He filmed Amsterdam showers over months to build one rainstorm.");
+Q("award",5,1958,"","Which Bert Haanstra short won the Oscar for Best Documentary Short?",["Glass","Rain","Zoo","Fanfare"],"It cuts glassblowers at work to a jazz score. Fanfare was his feature comedy.");
+Q("sound",5,1985,"wa,dr","Which composer scored both Kurosawa's Ran and Teshigahara's Woman in the Dunes?",["Tōru Takemitsu","Joe Hisaishi","Ryuichi Sakamoto","Fumio Hayasaka"],"Fumio Hayasaka scored Kurosawa's earlier films, including Seven Samurai.");
+Q("world",5,1990,"dr","Which Kiarostami film recreates a real fraud case, starring the real people involved?",["Close-Up","Taste of Cherry","The Wind Will Carry Us","Through the Olive Trees"],"The impostor had pretended to be the director Mohsen Makhmalbaf.");
+Q("hist",5,1906,"we,cr","Which country produced The Story of the Kelly Gang (1906), often called the first feature-length film?",["Australia","United States","France","Italy"],"It ran over an hour. Only fragments survive.");
+Q("dir",5,1985,"wa","Who directed Shoah (1985), more than nine hours long and made without archive footage?",["Claude Lanzmann","Alain Resnais","Marcel Ophüls","Chris Marker"],"Resnais made the short Night and Fog; Ophüls made The Sorrow and the Pity.");
+Q("world",5,1973,"dr,ro","Djibril Diop Mambéty's 1973 film about two young Dakar lovers dreaming of Paris is:",["Touki Bouki","Hyènes","Xala","Yeelen"],"Martin Scorsese's World Cinema Foundation restored it in 2008.");
+Q("craft",5,1960,"cr","Cinematographer Raoul Coutard is best known for his work with which director?",["Jean-Luc Godard","Robert Bresson","Éric Rohmer","Alain Resnais"],"He shot much of Breathless handheld from a wheelchair, pushed by Godard.");
+Q("anim",5,1933,"an","Who made the pinscreen animation Night on Bald Mountain (1933), with Claire Parker?",["Alexandre Alexeieff","Norman McLaren","Oskar Fischinger","Lotte Reiniger"],"The pinscreen used hundreds of thousands of pins, pushed in and out to make shadows.");
+Q("act",5,1957,"dr,fa","Who plays Jöns, the knight's squire, in The Seventh Seal?",["Gunnar Björnstrand","Bengt Ekerot","Nils Poppe","Erland Josephson"],"Bengt Ekerot plays Death; Nils Poppe plays the juggler Jof.");
+Q("world",5,1994,"dr","Who directed Sátántangó (1994), which runs over seven hours?",["Béla Tarr","Miklós Jancsó","István Szabó","László Nemes"],"Tarr's assistant on several films, László Nemes, later won the Oscar for Son of Saul.");
+
+window.QT_BANK = B.map((q,i)=>Object.assign(q,{id:i}));
+})();
+
+</script>
+<script>
+/* QUIZTAKE film catalogue for the Rate game: [title, year, director, "genres", country code, reception]
+   reception: "p" = widely panned by critics on release, "m" = mixed reviews, blank = generally well reviewed or not tagged */
+(function(){
+const F = [
+["The General",1926,"Buster Keaton, Clyde Bruckman","co,ac","US"],
+["Metropolis",1927,"Fritz Lang","sf","DE"],
+["Nosferatu",1922,"F. W. Murnau","ho","DE"],
+["It Happened One Night",1934,"Frank Capra","ro,co","US"],
+["Modern Times",1936,"Charlie Chaplin","co","US"],
+["Snow White and the Seven Dwarfs",1937,"David Hand","an,fa","US"],
+["The Wizard of Oz",1939,"Victor Fleming","fa,mu","US"],
+["Stagecoach",1939,"John Ford","we","US"],
+["Citizen Kane",1941,"Orson Welles","dr","US"],
+["Casablanca",1942,"Michael Curtiz","ro,dr","US"],
+["Bicycle Thieves",1948,"Vittorio De Sica","dr","IT"],
+["Sunset Boulevard",1950,"Billy Wilder","dr,th","US"],
+["Singin' in the Rain",1952,"Stanley Donen, Gene Kelly","mu,co","US"],
+["Tokyo Story",1953,"Yasujirō Ozu","dr","JP"],
+["Roman Holiday",1953,"William Wyler","ro,co","US"],
+["Seven Samurai",1954,"Akira Kurosawa","ac,dr","JP"],
+["Rear Window",1954,"Alfred Hitchcock","th","US"],
+["The Seventh Seal",1957,"Ingmar Bergman","dr,fa","SE"],
+["Vertigo",1958,"Alfred Hitchcock","th,ro","US"],
+["Some Like It Hot",1959,"Billy Wilder","co","US"],
+["Psycho",1960,"Alfred Hitchcock","ho,th","US"],
+["Breathless",1960,"Jean-Luc Godard","cr,ro","FR"],
+["La Dolce Vita",1960,"Federico Fellini","dr","IT"],
+["Lawrence of Arabia",1962,"David Lean","wa,dr","GB"],
+["The Sound of Music",1965,"Robert Wise","mu,ro","US"],
+["The Good, the Bad and the Ugly",1966,"Sergio Leone","we","IT"],
+["2001: A Space Odyssey",1968,"Stanley Kubrick","sf","GB"],
+["The Godfather",1972,"Francis Ford Coppola","cr,dr","US"],
+["Turkish Delight",1973,"Paul Verhoeven","ro,dr","NL"],
+["The Exorcist",1973,"William Friedkin","ho","US"],
+["Chinatown",1974,"Roman Polanski","cr,th","US"],
+["Jaws",1975,"Steven Spielberg","th,ac","US"],
+["Monty Python and the Holy Grail",1975,"Terry Gilliam, Terry Jones","co,fa","GB"],
+["Taxi Driver",1976,"Martin Scorsese","cr,dr","US"],
+["Rocky",1976,"John G. Avildsen","dr","US"],
+["Star Wars",1977,"George Lucas","sf,ac","US"],
+["Annie Hall",1977,"Woody Allen","co,ro","US"],
+["Soldier of Orange",1977,"Paul Verhoeven","wa","NL"],
+["Halloween",1978,"John Carpenter","ho","US"],
+["Alien",1979,"Ridley Scott","sf,ho","US"],
+["Apocalypse Now",1979,"Francis Ford Coppola","wa,dr","US"],
+["The Shining",1980,"Stanley Kubrick","ho","GB"],
+["Raiders of the Lost Ark",1981,"Steven Spielberg","ac","US"],
+["Blade Runner",1982,"Ridley Scott","sf,th","US"],
+["E.T. the Extra-Terrestrial",1982,"Steven Spielberg","sf,fa","US"],
+["Ghostbusters",1984,"Ivan Reitman","co,fa","US"],
+["Back to the Future",1985,"Robert Zemeckis","sf,co","US"],
+["The Princess Bride",1987,"Rob Reiner","fa,ro","US"],
+["Die Hard",1988,"John McTiernan","ac,th","US"],
+["My Neighbor Totoro",1988,"Hayao Miyazaki","an,fa","JP"],
+["Akira",1988,"Katsuhiro Otomo","an,sf","JP"],
+["Goodfellas",1990,"Martin Scorsese","cr","US"],
+["The Silence of the Lambs",1991,"Jonathan Demme","th,ho","US"],
+["Terminator 2: Judgment Day",1991,"James Cameron","sf,ac","US"],
+["Unforgiven",1992,"Clint Eastwood","we","US"],
+["Jurassic Park",1993,"Steven Spielberg","sf,ac","US"],
+["Schindler's List",1993,"Steven Spielberg","wa,dr","US"],
+["Groundhog Day",1993,"Harold Ramis","co,fa","US"],
+["Pulp Fiction",1994,"Quentin Tarantino","cr","US"],
+["The Shawshank Redemption",1994,"Frank Darabont","dr","US"],
+["The Lion King",1994,"Roger Allers, Rob Minkoff","an,mu","US"],
+["Toy Story",1995,"John Lasseter","an,co","US"],
+["Heat",1995,"Michael Mann","cr,ac","US"],
+["Fargo",1996,"Joel Coen, Ethan Coen","cr,co","US"],
+["Scream",1996,"Wes Craven","ho","US"],
+["Titanic",1997,"James Cameron","ro,dr","US"],
+["Character",1997,"Mike van Diem","dr","NL"],
+["Saving Private Ryan",1998,"Steven Spielberg","wa","US"],
+["Run Lola Run",1998,"Tom Tykwer","th,ac","DE"],
+["The Matrix",1999,"Lana Wachowski, Lilly Wachowski","sf,ac","US"],
+["Fight Club",1999,"David Fincher","dr,th","US"],
+["The Sixth Sense",1999,"M. Night Shyamalan","ho,th","US"],
+["In the Mood for Love",2000,"Wong Kar-wai","ro,dr","HK"],
+["Crouching Tiger, Hidden Dragon",2000,"Ang Lee","ac,fa","TW"],
+["Memento",2000,"Christopher Nolan","th","US"],
+["Gladiator",2000,"Ridley Scott","ac,wa","US"],
+["Amélie",2001,"Jean-Pierre Jeunet","ro,co","FR"],
+["Spirited Away",2001,"Hayao Miyazaki","an,fa","JP"],
+["The Lord of the Rings: The Fellowship of the Ring",2001,"Peter Jackson","fa,ac","NZ"],
+["City of God",2002,"Fernando Meirelles","cr","BR"],
+["Oldboy",2003,"Park Chan-wook","th,cr","KR"],
+["Finding Nemo",2003,"Andrew Stanton","an,co","US"],
+["Lost in Translation",2003,"Sofia Coppola","dr,ro","US"],
+["Eternal Sunshine of the Spotless Mind",2004,"Michel Gondry","ro,sf","US"],
+["The Incredibles",2004,"Brad Bird","an,ac","US"],
+["Pan's Labyrinth",2006,"Guillermo del Toro","fa,wa","MX"],
+["The Departed",2006,"Martin Scorsese","cr,th","US"],
+["The Lives of Others",2006,"Florian Henckel von Donnersmarck","dr,th","DE"],
+["Black Book",2006,"Paul Verhoeven","wa,th","NL"],
+["No Country for Old Men",2007,"Joel Coen, Ethan Coen","cr,th","US"],
+["There Will Be Blood",2007,"Paul Thomas Anderson","dr","US"],
+["Ratatouille",2007,"Brad Bird","an,co","US"],
+["The Dark Knight",2008,"Christopher Nolan","ac,cr","US"],
+["WALL-E",2008,"Andrew Stanton","an,sf","US"],
+["Up",2009,"Pete Docter","an,co","US"],
+["Inglourious Basterds",2009,"Quentin Tarantino","wa","US"],
+["Inception",2010,"Christopher Nolan","sf,th","US"],
+["The Social Network",2010,"David Fincher","dr","US"],
+["A Separation",2011,"Asghar Farhadi","dr","IR"],
+["Drive",2011,"Nicolas Winding Refn","cr,th","US"],
+["The Grand Budapest Hotel",2014,"Wes Anderson","co","US"],
+["Whiplash",2014,"Damien Chazelle","dr,mu","US"],
+["Interstellar",2014,"Christopher Nolan","sf","US"],
+["Ex Machina",2014,"Alex Garland","sf,th","GB"],
+["Mad Max: Fury Road",2015,"George Miller","ac,sf","AU"],
+["Moonlight",2016,"Barry Jenkins","dr","US"],
+["La La Land",2016,"Damien Chazelle","mu,ro","US"],
+["Arrival",2016,"Denis Villeneuve","sf,dr","US"],
+["Get Out",2017,"Jordan Peele","ho,th","US"],
+["Lady Bird",2017,"Greta Gerwig","co,dr","US"],
+["Call Me by Your Name",2017,"Luca Guadagnino","ro,dr","IT"],
+["Paddington 2",2017,"Paul King","co","GB"],
+["Hereditary",2018,"Ari Aster","ho","US"],
+["Roma",2018,"Alfonso Cuarón","dr","MX"],
+["Spider-Man: Into the Spider-Verse",2018,"Bob Persichetti, Peter Ramsey, Rodney Rothman","an,ac","US"],
+["Parasite",2019,"Bong Joon-ho","th,dr","KR"],
+["Portrait of a Lady on Fire",2019,"Céline Sciamma","ro,dr","FR"],
+["1917",2019,"Sam Mendes","wa","GB"],
+["Joker",2019,"Todd Phillips","cr,dr","US"],
+["Nomadland",2020,"Chloé Zhao","dr","US"],
+["Another Round",2020,"Thomas Vinterberg","co,dr","DK"],
+["Dune",2021,"Denis Villeneuve","sf,ac","US"],
+["Drive My Car",2021,"Ryusuke Hamaguchi","dr","JP"],
+["RRR",2022,"S. S. Rajamouli","ac,mu","IN"],
+["Everything Everywhere All at Once",2022,"Daniel Kwan, Daniel Scheinert","sf,co","US"],
+["Top Gun: Maverick",2022,"Joseph Kosinski","ac","US"],
+["Oppenheimer",2023,"Christopher Nolan","wa,dr","US"],
+["Barbie",2023,"Greta Gerwig","co,fa","US"],
+["Anatomy of a Fall",2023,"Justine Triet","th,dr","FR"],
+["Past Lives",2023,"Celine Song","ro,dr","US"],
+["Poor Things",2023,"Yorgos Lanthimos","co,fa","GB"],
+["The Zone of Interest",2023,"Jonathan Glazer","wa,dr","GB"],
+["Dune: Part Two",2024,"Denis Villeneuve","sf,ac","US"],
+["Anora",2024,"Sean Baker","co,dr","US"],
+["The Substance",2024,"Coralie Fargeat","ho","FR"],
+["The Cabinet of Dr. Caligari",1920,"Robert Wiene","ho","DE"],
+["The Kid",1921,"Charlie Chaplin","co,dr","US"],
+["Battleship Potemkin",1925,"Sergei Eisenstein","wa,dr","SU"],
+["The Gold Rush",1925,"Charlie Chaplin","co","US"],
+["Sunrise",1927,"F. W. Murnau","ro,dr","US"],
+["The Passion of Joan of Arc",1928,"Carl Theodor Dreyer","dr","FR"],
+["City Lights",1931,"Charlie Chaplin","co,ro","US"],
+["M",1931,"Fritz Lang","cr,th","DE"],
+["Frankenstein",1931,"James Whale","ho","US"],
+["Dracula",1931,"Tod Browning","ho","US"],
+["King Kong",1933,"Merian C. Cooper, Ernest B. Schoedsack","ac,fa","US"],
+["Duck Soup",1933,"Leo McCarey","co","US"],
+["Bride of Frankenstein",1935,"James Whale","ho","US"],
+["Top Hat",1935,"Mark Sandrich","mu,ro","US"],
+["La Grande Illusion",1937,"Jean Renoir","wa,dr","FR"],
+["Bringing Up Baby",1938,"Howard Hawks","co,ro","US"],
+["The Rules of the Game",1939,"Jean Renoir","dr,co","FR"],
+["Gone with the Wind",1939,"Victor Fleming","ro,wa","US"],
+["Mr. Smith Goes to Washington",1939,"Frank Capra","dr","US"],
+["The Grapes of Wrath",1940,"John Ford","dr","US"],
+["Rebecca",1940,"Alfred Hitchcock","th,ro","US"],
+["The Philadelphia Story",1940,"George Cukor","co,ro","US"],
+["His Girl Friday",1940,"Howard Hawks","co","US"],
+["The Maltese Falcon",1941,"John Huston","cr,th","US"],
+["Double Indemnity",1944,"Billy Wilder","cr,th","US"],
+["Brief Encounter",1945,"David Lean","ro,dr","GB"],
+["Rome, Open City",1945,"Roberto Rossellini","wa,dr","IT"],
+["It's a Wonderful Life",1946,"Frank Capra","dr,fa","US"],
+["The Third Man",1949,"Carol Reed","th","GB"],
+["Rashomon",1950,"Akira Kurosawa","cr,dr","JP"],
+["All About Eve",1950,"Joseph L. Mankiewicz","dr","US"],
+["A Streetcar Named Desire",1951,"Elia Kazan","dr","US"],
+["An American in Paris",1951,"Vincente Minnelli","mu,ro","US"],
+["High Noon",1952,"Fred Zinnemann","we","US"],
+["Ikiru",1952,"Akira Kurosawa","dr","JP"],
+["Gentlemen Prefer Blondes",1953,"Howard Hawks","mu,co","US"],
+["On the Waterfront",1954,"Elia Kazan","cr,dr","US"],
+["Godzilla",1954,"Ishirō Honda","sf,ho","JP"],
+["La Strada",1954,"Federico Fellini","dr","IT"],
+["Rebel Without a Cause",1955,"Nicholas Ray","dr","US"],
+["The Night of the Hunter",1955,"Charles Laughton","th,ho","US"],
+["The Searchers",1956,"John Ford","we","US"],
+["Invasion of the Body Snatchers",1956,"Don Siegel","sf,ho","US"],
+["12 Angry Men",1957,"Sidney Lumet","dr","US"],
+["The Bridge on the River Kwai",1957,"David Lean","wa","GB"],
+["Wild Strawberries",1957,"Ingmar Bergman","dr","SE"],
+["Paths of Glory",1957,"Stanley Kubrick","wa","US"],
+["Plan 9 from Outer Space",1957,"Ed Wood","sf,ho","US","p"],
+["Touch of Evil",1958,"Orson Welles","cr,th","US"],
+["North by Northwest",1959,"Alfred Hitchcock","th,ac","US"],
+["Ben-Hur",1959,"William Wyler","ac,dr","US"],
+["The 400 Blows",1959,"François Truffaut","dr","FR"],
+["Rio Bravo",1959,"Howard Hawks","we","US"],
+["The Apartment",1960,"Billy Wilder","co,ro","US"],
+["L'Avventura",1960,"Michelangelo Antonioni","dr","IT"],
+["Spartacus",1960,"Stanley Kubrick","ac,wa","US"],
+["Breakfast at Tiffany's",1961,"Blake Edwards","ro,co","US"],
+["West Side Story",1961,"Robert Wise, Jerome Robbins","mu,ro","US"],
+["Yojimbo",1961,"Akira Kurosawa","ac","JP"],
+["Dr. No",1962,"Terence Young","ac,th","GB"],
+["To Kill a Mockingbird",1962,"Robert Mulligan","dr","US"],
+["8½",1963,"Federico Fellini","dr","IT"],
+["The Birds",1963,"Alfred Hitchcock","ho","US"],
+["Cleopatra",1963,"Joseph L. Mankiewicz","dr,wa","US","m"],
+["The Great Escape",1963,"John Sturges","wa,ac","US"],
+["Dr. Strangelove",1964,"Stanley Kubrick","co,wa","GB"],
+["Goldfinger",1964,"Guy Hamilton","ac","GB"],
+["Mary Poppins",1964,"Robert Stevenson","mu,fa","US"],
+["A Hard Day's Night",1964,"Richard Lester","mu,co","GB"],
+["Doctor Zhivago",1965,"David Lean","ro,wa","GB"],
+["Persona",1966,"Ingmar Bergman","dr","SE"],
+["Who's Afraid of Virginia Woolf?",1966,"Mike Nichols","dr","US"],
+["Bonnie and Clyde",1967,"Arthur Penn","cr","US"],
+["The Graduate",1967,"Mike Nichols","co,ro","US"],
+["Le Samouraï",1967,"Jean-Pierre Melville","cr","FR"],
+["In the Heat of the Night",1967,"Norman Jewison","cr","US"],
+["Planet of the Apes",1968,"Franklin J. Schaffner","sf","US"],
+["Rosemary's Baby",1968,"Roman Polanski","ho","US"],
+["Night of the Living Dead",1968,"George A. Romero","ho","US"],
+["Once Upon a Time in the West",1968,"Sergio Leone","we","IT"],
+["Butch Cassidy and the Sundance Kid",1969,"George Roy Hill","we","US"],
+["Easy Rider",1969,"Dennis Hopper","dr","US"],
+["Midnight Cowboy",1969,"John Schlesinger","dr","US"],
+["The Wild Bunch",1969,"Sam Peckinpah","we","US"],
+["Paint Your Wagon",1969,"Joshua Logan","mu,we","US","m"],
+["Patton",1970,"Franklin J. Schaffner","wa","US"],
+["A Clockwork Orange",1971,"Stanley Kubrick","cr,sf","GB"],
+["The French Connection",1971,"William Friedkin","cr","US"],
+["Dirty Harry",1971,"Don Siegel","cr,ac","US"],
+["Cabaret",1972,"Bob Fosse","mu,dr","US"],
+["Aguirre, the Wrath of God",1972,"Werner Herzog","ac,dr","DE"],
+["Solaris",1972,"Andrei Tarkovsky","sf","SU"],
+["Deliverance",1972,"John Boorman","th","US"],
+["The Sting",1973,"George Roy Hill","cr,co","US"],
+["Enter the Dragon",1973,"Robert Clouse","ac","HK"],
+["American Graffiti",1973,"George Lucas","co","US"],
+["The Wicker Man",1973,"Robin Hardy","ho","GB"],
+["Don't Look Now",1973,"Nicolas Roeg","ho,th","GB"],
+["Blazing Saddles",1974,"Mel Brooks","co,we","US"],
+["The Godfather Part II",1974,"Francis Ford Coppola","cr,dr","US"],
+["The Texas Chain Saw Massacre",1974,"Tobe Hooper","ho","US"],
+["Young Frankenstein",1974,"Mel Brooks","co","US"],
+["One Flew Over the Cuckoo's Nest",1975,"Miloš Forman","dr","US"],
+["Barry Lyndon",1975,"Stanley Kubrick","dr,wa","GB"],
+["Dog Day Afternoon",1975,"Sidney Lumet","cr","US"],
+["The Rocky Horror Picture Show",1975,"Jim Sharman","mu,co","GB"],
+["Jeanne Dielman, 23 quai du Commerce, 1080 Bruxelles",1975,"Chantal Akerman","dr","BE"],
+["All the President's Men",1976,"Alan J. Pakula","th","US"],
+["Network",1976,"Sidney Lumet","dr","US"],
+["Carrie",1976,"Brian De Palma","ho","US"],
+["Close Encounters of the Third Kind",1977,"Steven Spielberg","sf","US"],
+["Saturday Night Fever",1977,"John Badham","mu,dr","US"],
+["Suspiria",1977,"Dario Argento","ho","IT"],
+["Eraserhead",1977,"David Lynch","ho","US"],
+["The Deer Hunter",1978,"Michael Cimino","wa,dr","US"],
+["Grease",1978,"Randal Kleiser","mu,ro","US"],
+["Superman",1978,"Richard Donner","ac,sf","US"],
+["Dawn of the Dead",1978,"George A. Romero","ho","US"],
+["Days of Heaven",1978,"Terrence Malick","dr","US"],
+["Kramer vs. Kramer",1979,"Robert Benton","dr","US"],
+["Mad Max",1979,"George Miller","ac","AU"],
+["Life of Brian",1979,"Terry Jones","co","GB"],
+["Stalker",1979,"Andrei Tarkovsky","sf","SU"],
+["Manhattan",1979,"Woody Allen","co,ro","US"],
+["The Muppet Movie",1979,"James Frawley","co","US"],
+["The Empire Strikes Back",1980,"Irvin Kershner","sf,ac","US"],
+["Raging Bull",1980,"Martin Scorsese","dr","US"],
+["Airplane!",1980,"Jim Abrahams, David Zucker, Jerry Zucker","co","US"],
+["The Blues Brothers",1980,"John Landis","co,mu","US"],
+["Heaven's Gate",1980,"Michael Cimino","we","US","p"],
+["Flash Gordon",1980,"Mike Hodges","sf,ac","GB","m"],
+["Spetters",1980,"Paul Verhoeven","dr","NL"],
+["Das Boot",1981,"Wolfgang Petersen","wa","DE"],
+["An American Werewolf in London",1981,"John Landis","ho,co","GB"],
+["Escape from New York",1981,"John Carpenter","sf,ac","US"],
+["The Evil Dead",1981,"Sam Raimi","ho","US"],
+["The Thing",1982,"John Carpenter","ho,sf","US"],
+["Tron",1982,"Steven Lisberger","sf","US"],
+["Fitzcarraldo",1982,"Werner Herzog","dr","DE"],
+["Gandhi",1982,"Richard Attenborough","wa,dr","GB"],
+["Tootsie",1982,"Sydney Pollack","co","US"],
+["Scarface",1983,"Brian De Palma","cr","US"],
+["Return of the Jedi",1983,"Richard Marquand","sf,ac","US"],
+["Jaws 3-D",1983,"Joe Alves","th","US","p"],
+["The Fourth Man",1983,"Paul Verhoeven","th","NL"],
+["The Lift",1983,"Dick Maas","ho","NL"],
+["The Terminator",1984,"James Cameron","sf,ac","US"],
+["Amadeus",1984,"Miloš Forman","dr,mu","US"],
+["A Nightmare on Elm Street",1984,"Wes Craven","ho","US"],
+["This Is Spinal Tap",1984,"Rob Reiner","co,mu","US"],
+["Dune",1984,"David Lynch","sf","US","m"],
+["Gremlins",1984,"Joe Dante","ho,co","US"],
+["Beverly Hills Cop",1984,"Martin Brest","ac,co","US"],
+["The Breakfast Club",1985,"John Hughes","co,dr","US"],
+["Brazil",1985,"Terry Gilliam","sf,co","GB"],
+["Ran",1985,"Akira Kurosawa","wa,dr","JP"],
+["The Goonies",1985,"Richard Donner","ac","US"],
+["Rambo: First Blood Part II",1985,"George P. Cosmatos","ac","US","m"],
+["Aliens",1986,"James Cameron","sf,ac","US"],
+["Top Gun",1986,"Tony Scott","ac","US","m"],
+["Ferris Bueller's Day Off",1986,"John Hughes","co","US"],
+["Platoon",1986,"Oliver Stone","wa","US"],
+["Howard the Duck",1986,"Willard Huyck","co,sf","US","p"],
+["Labyrinth",1986,"Jim Henson","fa","US"],
+["Flodder",1986,"Dick Maas","co","NL"],
+["RoboCop",1987,"Paul Verhoeven","sf,ac","US"],
+["Full Metal Jacket",1987,"Stanley Kubrick","wa","GB"],
+["Wings of Desire",1987,"Wim Wenders","fa,ro","DE"],
+["Dirty Dancing",1987,"Emile Ardolino","ro,mu","US"],
+["Ishtar",1987,"Elaine May","co","US","p"],
+["Jaws: The Revenge",1987,"Joseph Sargent","th","US","p"],
+["Superman IV: The Quest for Peace",1987,"Sidney J. Furie","ac","US","p"],
+["Predator",1987,"John McTiernan","ac,sf","US"],
+["Who Framed Roger Rabbit",1988,"Robert Zemeckis","an,co","US"],
+["Grave of the Fireflies",1988,"Isao Takahata","an,wa","JP"],
+["Cinema Paradiso",1988,"Giuseppe Tornatore","dr","IT"],
+["Rain Man",1988,"Barry Levinson","dr","US"],
+["Beetlejuice",1988,"Tim Burton","co,fa","US"],
+["The Vanishing",1988,"George Sluizer","th","NL"],
+["Batman",1989,"Tim Burton","ac","US"],
+["Do the Right Thing",1989,"Spike Lee","dr","US"],
+["When Harry Met Sally...",1989,"Rob Reiner","ro,co","US"],
+["Star Trek V: The Final Frontier",1989,"William Shatner","sf","US","p"],
+["Road House",1989,"Rowdy Herrington","ac","US","m"],
+["Home Alone",1990,"Chris Columbus","co","US"],
+["Total Recall",1990,"Paul Verhoeven","sf,ac","US"],
+["Edward Scissorhands",1990,"Tim Burton","fa,ro","US"],
+["Ghost",1990,"Jerry Zucker","ro,fa","US"],
+["The Godfather Part III",1990,"Francis Ford Coppola","cr,dr","US","m"],
+["Pretty Woman",1990,"Garry Marshall","ro,co","US"],
+["Rocky V",1990,"John G. Avildsen","dr","US","p"],
+["Beauty and the Beast",1991,"Gary Trousdale, Kirk Wise","an,mu","US"],
+["Thelma & Louise",1991,"Ridley Scott","cr,dr","US"],
+["Hudson Hawk",1991,"Michael Lehmann","ac,co","US","p"],
+["Highlander II: The Quickening",1991,"Russell Mulcahy","sf,ac","US","p"],
+["Point Break",1991,"Kathryn Bigelow","ac,cr","US"],
+["Basic Instinct",1992,"Paul Verhoeven","th","US"],
+["Alien 3",1992,"David Fincher","sf,ho","US","m"],
+["Aladdin",1992,"Ron Clements, John Musker","an,mu","US"],
+["Reservoir Dogs",1992,"Quentin Tarantino","cr","US"],
+["Bram Stoker's Dracula",1992,"Francis Ford Coppola","ho,ro","US"],
+["Super Mario Bros.",1993,"Rocky Morton, Annabel Jankel","fa,co","US","p"],
+["Mrs. Doubtfire",1993,"Chris Columbus","co","US"],
+["Three Colours: Blue",1993,"Krzysztof Kieślowski","dr","FR"],
+["Forrest Gump",1994,"Robert Zemeckis","dr,co","US"],
+["Léon: The Professional",1994,"Luc Besson","cr,ac","FR"],
+["Speed",1994,"Jan de Bont","ac,th","US"],
+["Chungking Express",1994,"Wong Kar-wai","ro,dr","HK"],
+["Dumb and Dumber",1994,"Peter Farrelly","co","US"],
+["Street Fighter",1994,"Steven E. de Souza","ac","US","p"],
+["Ace Ventura: Pet Detective",1994,"Tom Shadyac","co","US","m"],
+["Four Weddings and a Funeral",1994,"Mike Newell","ro,co","GB"],
+["Antonia's Line",1995,"Marleen Gorris","dr","NL"],
+["Se7en",1995,"David Fincher","cr,th","US"],
+["Braveheart",1995,"Mel Gibson","wa,ac","US"],
+["Waterworld",1995,"Kevin Reynolds","sf,ac","US","m"],
+["Showgirls",1995,"Paul Verhoeven","dr","US","p"],
+["Batman Forever",1995,"Joel Schumacher","ac","US","m"],
+["Mortal Kombat",1995,"Paul W. S. Anderson","ac,fa","US","m"],
+["Before Sunrise",1995,"Richard Linklater","ro,dr","US"],
+["La Haine",1995,"Mathieu Kassovitz","cr,dr","FR"],
+["Clueless",1995,"Amy Heckerling","co","US"],
+["Babe",1995,"Chris Noonan","co,fa","AU"],
+["Independence Day",1996,"Roland Emmerich","sf,ac","US","m"],
+["Trainspotting",1996,"Danny Boyle","dr,co","GB"],
+["Mission: Impossible",1996,"Brian De Palma","ac,th","US"],
+["Space Jam",1996,"Joe Pytka","an,co","US","m"],
+["Jerry Maguire",1996,"Cameron Crowe","ro,dr","US"],
+["Batman & Robin",1997,"Joel Schumacher","ac","US","p"],
+["Speed 2: Cruise Control",1997,"Jan de Bont","ac","US","p"],
+["The Fifth Element",1997,"Luc Besson","sf,ac","FR"],
+["Starship Troopers",1997,"Paul Verhoeven","sf,ac","US","m"],
+["Princess Mononoke",1997,"Hayao Miyazaki","an,fa","JP"],
+["L.A. Confidential",1997,"Curtis Hanson","cr","US"],
+["Boogie Nights",1997,"Paul Thomas Anderson","dr","US"],
+["Life Is Beautiful",1997,"Roberto Benigni","wa,co","IT"],
+["The Postman",1997,"Kevin Costner","sf","US","p"],
+["Godzilla",1998,"Roland Emmerich","sf,ac","US","p"],
+["Armageddon",1998,"Michael Bay","sf,ac","US","m"],
+["The Big Lebowski",1998,"Joel Coen, Ethan Coen","co,cr","US"],
+["The Truman Show",1998,"Peter Weir","co,dr","US"],
+["Rushmore",1998,"Wes Anderson","co","US"],
+["Lock, Stock and Two Smoking Barrels",1998,"Guy Ritchie","cr,co","GB"],
+["The Avengers",1998,"Jeremiah Chechik","ac","US","p"],
+["Star Wars: Episode I – The Phantom Menace",1999,"George Lucas","sf,ac","US","m"],
+["American Beauty",1999,"Sam Mendes","dr","US"],
+["Magnolia",1999,"Paul Thomas Anderson","dr","US"],
+["Wild Wild West",1999,"Barry Sonnenfeld","ac,we","US","p"],
+["All About My Mother",1999,"Pedro Almodóvar","dr","ES"],
+["Being John Malkovich",1999,"Spike Jonze","co,fa","US"],
+["The Mummy",1999,"Stephen Sommers","ac,fa","US","m"],
+["Kruimeltje",1999,"Maria Peters","dr,co","NL"],
+["Battlefield Earth",2000,"Roger Christian","sf","US","p"],
+["Requiem for a Dream",2000,"Darren Aronofsky","dr","US"],
+["Scary Movie",2000,"Keenen Ivory Wayans","co,ho","US","m"],
+["Meet the Parents",2000,"Jay Roach","co","US"],
+["Cast Away",2000,"Robert Zemeckis","dr","US"],
+["Shrek",2001,"Andrew Adamson, Vicky Jenson","an,co","US"],
+["Mulholland Drive",2001,"David Lynch","th","US"],
+["Pearl Harbor",2001,"Michael Bay","wa,ro","US","p"],
+["Glitter",2001,"Vondie Curtis-Hall","mu,dr","US","p"],
+["Planet of the Apes",2001,"Tim Burton","sf","US","m"],
+["Harry Potter and the Philosopher's Stone",2001,"Chris Columbus","fa","GB"],
+["Donnie Darko",2001,"Richard Kelly","sf,th","US"],
+["Ocean's Eleven",2001,"Steven Soderbergh","cr","US"],
+["Zoolander",2001,"Ben Stiller","co","US","m"],
+["Spider-Man",2002,"Sam Raimi","ac","US"],
+["28 Days Later",2002,"Danny Boyle","ho","GB"],
+["Swept Away",2002,"Guy Ritchie","ro,co","GB","p"],
+["The Pianist",2002,"Roman Polanski","wa,dr","FR"],
+["Gigli",2003,"Martin Brest","co,cr","US","p"],
+["The Room",2003,"Tommy Wiseau","dr","US","p"],
+["Kill Bill: Volume 1",2003,"Quentin Tarantino","ac,cr","US"],
+["Elf",2003,"Jon Favreau","co","US"],
+["Love Actually",2003,"Richard Curtis","ro,co","GB","m"],
+["Daredevil",2003,"Mark Steven Johnson","ac","US","p"],
+["The Cat in the Hat",2003,"Bo Welch","co","US","p"],
+["From Justin to Kelly",2003,"Robert Iscove","mu,ro","US","p"],
+["The League of Extraordinary Gentlemen",2003,"Stephen Norrington","ac,fa","US","p"],
+["Pirates of the Caribbean: The Curse of the Black Pearl",2003,"Gore Verbinski","ac,fa","US"],
+["The Matrix Revolutions",2003,"Lana Wachowski, Lilly Wachowski","sf,ac","US","m"],
+["Memories of Murder",2003,"Bong Joon-ho","cr,th","KR"],
+["Catwoman",2004,"Pitof","ac","US","p"],
+["Alexander",2004,"Oliver Stone","wa","US","p"],
+["Troy",2004,"Wolfgang Petersen","wa,ac","US","m"],
+["Van Helsing",2004,"Stephen Sommers","ac,ho","US","p"],
+["The Day After Tomorrow",2004,"Roland Emmerich","sf","US","m"],
+["Shaun of the Dead",2004,"Edgar Wright","ho,co","GB"],
+["Mean Girls",2004,"Mark Waters","co","US"],
+["Downfall",2004,"Oliver Hirschbiegel","wa","DE"],
+["Napoleon Dynamite",2004,"Jared Hess","co","US","m"],
+["Million Dollar Baby",2004,"Clint Eastwood","dr","US"],
+["Elektra",2005,"Rob Bowman","ac","US","p"],
+["Fantastic Four",2005,"Tim Story","ac","US","p"],
+["Brokeback Mountain",2005,"Ang Lee","ro,dr","US"],
+["Batman Begins",2005,"Christopher Nolan","ac","US"],
+["King Kong",2005,"Peter Jackson","ac,fa","NZ"],
+["The Da Vinci Code",2006,"Ron Howard","th","US","m"],
+["Casino Royale",2006,"Martin Campbell","ac","GB"],
+["Children of Men",2006,"Alfonso Cuarón","sf,th","GB"],
+["The Prestige",2006,"Christopher Nolan","th","US"],
+["Little Miss Sunshine",2006,"Jonathan Dayton, Valerie Faris","co","US"],
+["Basic Instinct 2",2006,"Michael Caton-Jones","th","US","p"],
+["Eragon",2006,"Stefen Fangmeier","fa","US","p"],
+["Lady in the Water",2006,"M. Night Shyamalan","fa","US","p"],
+["X-Men: The Last Stand",2006,"Brett Ratner","ac","US","m"],
+["Borat",2006,"Larry Charles","co","US"],
+["Spider-Man 3",2007,"Sam Raimi","ac","US","m"],
+["Ghost Rider",2007,"Mark Steven Johnson","ac,fa","US","p"],
+["Norbit",2007,"Brian Robbins","co","US","p"],
+["Epic Movie",2007,"Jason Friedberg, Aaron Seltzer","co","US","p"],
+["Superbad",2007,"Greg Mottola","co","US"],
+["Zodiac",2007,"David Fincher","th,cr","US"],
+["Atonement",2007,"Joe Wright","ro,wa","GB"],
+["4 Months, 3 Weeks and 2 Days",2007,"Cristian Mungiu","dr","RO"],
+["Love Is All",2007,"Joram Lürsen","ro,co","NL"],
+["The Happening",2008,"M. Night Shyamalan","th","US","p"],
+["Disaster Movie",2008,"Jason Friedberg, Aaron Seltzer","co","US","p"],
+["The Love Guru",2008,"Marco Schnabel","co","US","p"],
+["Twilight",2008,"Catherine Hardwicke","ro,fa","US","m"],
+["Indiana Jones and the Kingdom of the Crystal Skull",2008,"Steven Spielberg","ac","US","m"],
+["Slumdog Millionaire",2008,"Danny Boyle","dr,ro","GB"],
+["Let the Right One In",2008,"Tomas Alfredson","ho,ro","SE"],
+["Iron Man",2008,"Jon Favreau","ac,sf","US"],
+["Mamma Mia!",2008,"Phyllida Lloyd","mu,co","GB","m"],
+["Winter in Wartime",2008,"Martin Koolhoven","wa","NL"],
+["Dragonball Evolution",2009,"James Wong","ac","US","p"],
+["Transformers: Revenge of the Fallen",2009,"Michael Bay","sf,ac","US","p"],
+["X-Men Origins: Wolverine",2009,"Gavin Hood","ac","US","p"],
+["2012",2009,"Roland Emmerich","sf","US","m"],
+["Avatar",2009,"James Cameron","sf,ac","US"],
+["District 9",2009,"Neill Blomkamp","sf","ZA"],
+["The Hangover",2009,"Todd Phillips","co","US"],
+["Fantastic Mr. Fox",2009,"Wes Anderson","an,co","US"],
+["The Last Airbender",2010,"M. Night Shyamalan","fa","US","p"],
+["Sex and the City 2",2010,"Michael Patrick King","co,ro","US","p"],
+["Grown Ups",2010,"Dennis Dugan","co","US","p"],
+["Black Swan",2010,"Darren Aronofsky","th,dr","US"],
+["Toy Story 3",2010,"Lee Unkrich","an","US"],
+["Green Lantern",2011,"Martin Campbell","ac","US","p"],
+["Jack and Jill",2011,"Dennis Dugan","co","US","p"],
+["Bridesmaids",2011,"Paul Feig","co","US"],
+["The Artist",2011,"Michel Hazanavicius","co,ro","FR"],
+["Melancholia",2011,"Lars von Trier","dr,sf","DK"],
+["John Carter",2012,"Andrew Stanton","sf,ac","US","m"],
+["The Avengers",2012,"Joss Whedon","ac,sf","US"],
+["Battleship",2012,"Peter Berg","ac,sf","US","p"],
+["The Hunger Games",2012,"Gary Ross","sf,ac","US"],
+["Django Unchained",2012,"Quentin Tarantino","we","US"],
+["Skyfall",2012,"Sam Mendes","ac","GB"],
+["The Hunt",2012,"Thomas Vinterberg","dr","DK"],
+["The Lone Ranger",2013,"Gore Verbinski","we,ac","US","p"],
+["After Earth",2013,"M. Night Shyamalan","sf","US","p"],
+["Gravity",2013,"Alfonso Cuarón","sf,th","US"],
+["The Wolf of Wall Street",2013,"Martin Scorsese","cr,co","US"],
+["Her",2013,"Spike Jonze","ro,sf","US"],
+["Frozen",2013,"Chris Buck, Jennifer Lee","an,mu","US"],
+["12 Years a Slave",2013,"Steve McQueen","dr,wa","US"],
+["Borgman",2013,"Alex van Warmerdam","th","NL"],
+["Gone Girl",2014,"David Fincher","th","US"],
+["Birdman",2014,"Alejandro G. Iñárritu","co,dr","US"],
+["Transformers: Age of Extinction",2014,"Michael Bay","sf,ac","US","p"],
+["Guardians of the Galaxy",2014,"James Gunn","sf,ac","US"],
+["Lucy",2014,"Luc Besson","sf,ac","FR","m"],
+["Fifty Shades of Grey",2015,"Sam Taylor-Johnson","ro","US","p"],
+["Fantastic Four",2015,"Josh Trank","ac","US","p"],
+["Pixels",2015,"Chris Columbus","co","US","p"],
+["Jupiter Ascending",2015,"Lana Wachowski, Lilly Wachowski","sf","US","p"],
+["Tomorrowland",2015,"Brad Bird","sf","US","m"],
+["Terminator Genisys",2015,"Alan Taylor","sf,ac","US","p"],
+["Inside Out",2015,"Pete Docter","an,co","US"],
+["Star Wars: The Force Awakens",2015,"J. J. Abrams","sf,ac","US"],
+["Spotlight",2015,"Tom McCarthy","dr","US"],
+["Batman v Superman: Dawn of Justice",2016,"Zack Snyder","ac","US","p"],
+["Suicide Squad",2016,"David Ayer","ac","US","p"],
+["Gods of Egypt",2016,"Alex Proyas","fa","US","p"],
+["Independence Day: Resurgence",2016,"Roland Emmerich","sf","US","p"],
+["Zootopia",2016,"Byron Howard, Rich Moore","an,co","US"],
+["Your Name",2016,"Makoto Shinkai","an,ro","JP"],
+["Toni Erdmann",2016,"Maren Ade","co,dr","DE"],
+["The Handmaiden",2016,"Park Chan-wook","th,ro","KR"],
+["Brimstone",2016,"Martin Koolhoven","we","NL"],
+["The Emoji Movie",2017,"Tony Leondis","an,co","US","p"],
+["Justice League",2017,"Zack Snyder","ac","US","p"],
+["The Mummy",2017,"Alex Kurtzman","ac,ho","US","p"],
+["Valerian and the City of a Thousand Planets",2017,"Luc Besson","sf","FR","m"],
+["Blade Runner 2049",2017,"Denis Villeneuve","sf","US"],
+["Dunkirk",2017,"Christopher Nolan","wa","GB"],
+["The Shape of Water",2017,"Guillermo del Toro","fa,ro","US"],
+["Coco",2017,"Lee Unkrich","an,mu","US"],
+["Black Panther",2018,"Ryan Coogler","ac","US"],
+["A Quiet Place",2018,"John Krasinski","ho","US"],
+["Bohemian Rhapsody",2018,"Bryan Singer","mu,dr","GB","m"],
+["Shoplifters",2018,"Hirokazu Kore-eda","dr","JP"],
+["Cats",2019,"Tom Hooper","mu","GB","p"],
+["Avengers: Endgame",2019,"Anthony Russo, Joe Russo","ac,sf","US"],
+["The Irishman",2019,"Martin Scorsese","cr","US"],
+["Once Upon a Time in Hollywood",2019,"Quentin Tarantino","co,dr","US"],
+["Midsommar",2019,"Ari Aster","ho","US"],
+["Knives Out",2019,"Rian Johnson","th,co","US"],
+["Uncut Gems",2019,"Josh Safdie, Benny Safdie","th,cr","US"],
+["Marriage Story",2019,"Noah Baumbach","dr","US"],
+["Tenet",2020,"Christopher Nolan","sf,ac","US","m"],
+["Soul",2020,"Pete Docter","an","US"],
+["Promising Young Woman",2020,"Emerald Fennell","th","US"],
+["Space Jam: A New Legacy",2021,"Malcolm D. Lee","an,co","US","p"],
+["Eternals",2021,"Chloé Zhao","ac,sf","US","m"],
+["The Power of the Dog",2021,"Jane Campion","we,dr","NZ"],
+["Don't Look Up",2021,"Adam McKay","co,sf","US","m"],
+["The Worst Person in the World",2021,"Joachim Trier","ro,co","NO"],
+["Morbius",2022,"Daniel Espinosa","ac,ho","US","p"],
+["Black Adam",2022,"Jaume Collet-Serra","ac","US","p"],
+["Blonde",2022,"Andrew Dominik","dr","US","m"],
+["The Banshees of Inisherin",2022,"Martin McDonagh","co,dr","IE"],
+["Avatar: The Way of Water",2022,"James Cameron","sf,ac","US"],
+["Triangle of Sadness",2022,"Ruben Östlund","co","SE"],
+["All Quiet on the Western Front",2022,"Edward Berger","wa","DE"],
+["The Flash",2023,"Andy Muschietti","ac","US","m"],
+["The Marvels",2023,"Nia DaCosta","ac","US","m"],
+["Ant-Man and the Wasp: Quantumania",2023,"Peyton Reed","ac,sf","US","p"],
+["Killers of the Flower Moon",2023,"Martin Scorsese","cr,we","US"],
+["Spider-Man: Across the Spider-Verse",2023,"Joaquim Dos Santos, Kemp Powers, Justin K. Thompson","an,ac","US"],
+["The Boy and the Heron",2023,"Hayao Miyazaki","an,fa","JP"],
+["Godzilla Minus One",2023,"Takashi Yamazaki","sf,ac","JP"],
+["Madame Web",2024,"S. J. Clarkson","ac","US","p"],
+["Argylle",2024,"Matthew Vaughn","ac,co","US","p"],
+["Borderlands",2024,"Eli Roth","ac,sf","US","p"],
+["Megalopolis",2024,"Francis Ford Coppola","sf,dr","US","p"],
+["Joker: Folie à Deux",2024,"Todd Phillips","dr,mu","US","p"],
+["Inside Out 2",2024,"Kelsey Mann","an,co","US"],
+["Wicked",2024,"Jon M. Chu","mu,fa","US"],
+["Conclave",2024,"Edward Berger","th","GB"],
+["Furiosa: A Mad Max Saga",2024,"George Miller","ac","AU"],
+["Challengers",2024,"Luca Guadagnino","ro,dr","US"],
+["Flow",2024,"Gints Zilbalodis","an","LV"]
+];
+window.QT_COUNTRIES = {US:"United States",GB:"United Kingdom",FR:"France",DE:"Germany",IT:"Italy",JP:"Japan",KR:"South Korea",NL:"Netherlands",SE:"Sweden",MX:"Mexico",BR:"Brazil",IR:"Iran",HK:"Hong Kong",TW:"Taiwan",NZ:"New Zealand",AU:"Australia",DK:"Denmark",IN:"India",SU:"Soviet Union",BE:"Belgium",ES:"Spain",RO:"Romania",ZA:"South Africa",NO:"Norway",IE:"Ireland",LV:"Latvia"};
+window.QT_FILMS = F.map(r=>({
+  id:(r[0]+"-"+r[1]).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""),
+  title:r[0], year:r[1], director:r[2], genres:r[3].split(","), country:r[4], reception:r[5]||""
+}));
+})();
+
+</script>
+<script>
+const CATS=window.QT_CATS, GENRES=window.QT_GENRES, ERAS=window.QT_ERAS, BANK=window.QT_BANK, FILMS=window.QT_FILMS, COUNTRIES=window.QT_COUNTRIES;
+const FILM_BY_ID=Object.fromEntries(FILMS.map(f=>[f.id,f]));
+
+/* ---------- Ranks and achievements ---------- */
+const RANKS=[[0,"Extra"],[1000,"Background Actor"],[3000,"Bit Part"],[7000,"Supporting Role"],[15000,"Leading Role"],[30000,"Director"],[60000,"Auteur"],[100000,"Screen Legend"]];
+const ACHS=[
+  ["first","First Take","Finish your first quiz"],
+  ["flawless","Flawless Feature","10 out of 10 in Feature Presentation"],
+  ["quick","Quick Draw","Answer correctly with 12+ seconds left"],
+  ["streak5","Hot Streak","Five correct answers in a row"],
+  ["marathon","Marathon Screening","Reach 15 in Sudden Death"],
+  ["daily","Daily Ritual","Complete a Daily Reel"],
+  ["perfectDaily","Final Cut","Seven out of seven on a Daily Reel"],
+  ["polymath","Polymath","Answer correctly in every category"],
+  ["eras","Time Traveller","Answer correctly in all six eras"],
+  ["auteur","Auteur Theory","Ten correct Directors answers in total"],
+  ["leading","Top Billing","Reach Leading Role"],
+  ["climber","Rising Star","Clear Career level 6"],
+  ["cinephileLvl","True Cinéphile","Clear Career level 9"],
+  ["vault","Keeper of the Vault","Clear Career level 12"],
+  ["ensemble","Three's Company","Ten correct Shared Screen answers"],
+  ["taste25","Taste Maker","Rate 25 films"],
+  ["taste100","Critic","Rate 100 films"]
+];
+function rankFor(xp){let r=0;for(let i=0;i<RANKS.length;i++)if(xp>=RANKS[i][0])r=i;return r;}
+function eraOf(year){if(!year)return null;const e=ERAS.find(e=>year>=e.from&&year<=e.to);return e?e.id:null;}
+function eraName(id){return(ERAS.find(e=>e.id===id)||{}).name||id;}
+
+const DIFF=["","Opening act","Second act","Finale","Cinéphile","Archivist"];
+const DIFF_COL=["","#5fc28e","#9bc25f","#f2b441","#e5864b","#e5534b"];
+const LEVELS=[
+  ["Usher",[8,0,0,0,0]],["Projectionist",[6,2,0,0,0]],["Film Club",[4,4,0,0,0]],["Film Student",[2,6,0,0,0]],
+  ["Critic",[0,8,0,0,0]],["Programmer",[0,5,3,0,0]],["Festival Juror",[0,3,5,0,0]],["Historian",[0,0,8,0,0]],
+  ["Cinéphile",[0,0,5,3,0]],["Curator",[0,0,3,5,0]],["Archivist",[0,0,0,6,2]],["The Vault",[0,0,0,3,5]]
+];
+const PASS=6;
+function timeFor(q,mode){return (q.diff>=4||q.cat==="cast")?20:MODES[mode].time;}
+
+/* ---------- Pure scoring ---------- */
+function pointsFor(diff,tLeft,tMax,streakBefore){const mult=1+0.1*Math.min(streakBefore,5);return Math.round(100*diff*(1+0.5*Math.max(0,tLeft)/tMax)*mult);}
+
+/* ---------- Helpers ---------- */
+const $=id=>document.getElementById(id);
+const fmt=n=>Number(n).toLocaleString("en-GB");
+function todayStr(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function hash(s){let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function shuffle(a,r=Math.random){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("on");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("on"),2400);}
+function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
+
+/* ---------- Profile ---------- */
+const BLANK=()=>({xp:0,games:0,best:0,sdBest:0,dirCorrect:0,cats:{},kg:{},ke:{},ach:[],dailyDate:"",dailyScore:0,dailyCorrect:0,ratings:{},rateLog:[],share:false,lvlUnlocked:1,lvlStars:{},castCorrect:0,recent:[]});
+let P=BLANK();
+try{const s=localStorage.getItem("quiztake.profile");if(s)P=Object.assign(BLANK(),JSON.parse(s));}catch(e){}
+function saveLocal(){try{localStorage.setItem("quiztake.profile",JSON.stringify(P));}catch(e){}}
+let DB=null,USER=null,UID=null,writeBlocked=false,IS_OWNER=false;
+
+/* ============ QUIZ ============ */
+const MODES={feature:{name:"Feature Presentation",short:"Feature",time:15},daily:{name:"Daily Reel",short:"Daily",time:15},sudden:{name:"Sudden Death",short:"Sudden Death",time:10},custom:{name:"Custom Reel",short:"Custom",time:15},level:{name:"Career",short:"Level",time:15},deep:{name:"Deep Cuts",short:"Deep Cuts",time:20}};
+let G=null,timer=null,G_last=null;
+let F={cat:null,era:null,gen:null};
+
+function matches(q,f){
+  if(f.cat&&q.cat!==f.cat)return false;
+  if(f.era&&eraOf(q.year)!==f.era)return false;
+  if(f.gen&&!q.genres.includes(f.gen))return false;
+  return true;
+}
+/* All questions: hand-written BANK (numeric ids) + generated specs from TMDB data (string ids, local copy only). */
+let GENSPECS=[],GENBYID={},QCACHE={};
+function allQ(){return GENSPECS.length?BANK.concat(GENSPECS):BANK;}
+function QQ(id){return typeof id==="number"?BANK[id]:(QCACHE[id]||(GENBYID[id]?(QCACHE[id]=materialize(GENBYID[id])):null));}
+function pickQuestions(mode,f){
+  const ALL=mode==="daily"?BANK:allQ();
+  const by=d=>ALL.filter(q=>q.diff===d);
+  if(mode==="feature")return[...shuffle(by(1)).slice(0,4),...shuffle(by(2)).slice(0,4),...shuffle(by(3)).slice(0,2)].map(q=>q.id);
+  if(mode==="daily"){const r=rng(hash("cinelore-"+todayStr()));return[...shuffle(by(1),r).slice(0,3),...shuffle(by(2),r).slice(0,3),...shuffle(by(3),r).slice(0,1)].map(q=>q.id);}
+  if(mode==="deep")return shuffle(GENSPECS.filter(q=>q.tpl==="deep")).slice(0,10).map(q=>q.id);
+  if(mode==="sudden")return[1,2,3,4,5].flatMap(d=>shuffle(by(d))).map(q=>q.id);
+  if(mode==="level"){
+    const mix=LEVELS[f.level-1][1],recent=new Set(P.recent||[]);
+    return mix.flatMap((n,i)=>{const pool=shuffle(by(i+1));const fresh=pool.filter(q=>!recent.has(q.id));return [...fresh,...pool.filter(q=>recent.has(q.id))].slice(0,n);}).map(q=>q.id);
+  }
+  return shuffle(allQ().filter(q=>matches(q,f))).slice(0,10).sort((a,b)=>a.diff-b.diff).map(q=>q.id);
+}
+function reelLabel(f){
+  const parts=[];if(f.era)parts.push(eraName(f.era));if(f.gen)parts.push(GENRES[f.gen]);if(f.cat)parts.push(CATS[f.cat]);
+  return parts.length?parts.join(" · "):"Any";
+}
+function startGame(mode,f){
+  if(mode==="daily"&&P.dailyDate===todayStr()){toast("You've already played today's Daily Reel. Back tomorrow.");return;}
+  const ids=pickQuestions(mode,f||{});
+  if(mode==="deep"&&ids.length<4){toast("Deep cuts appear once the film details finish loading from TMDB.");return;}
+  if(mode==="custom"&&ids.length<4){toast("Fewer than 4 questions match. Widen the filters.");return;}
+  if(mode==="level"&&f.level>P.lvlUnlocked){toast("Clear the level before it first.");return;}
+  const seed=mode==="daily"?hash("opts-"+todayStr()):Math.floor(Math.random()*1e9);
+  G={mode,f:f||null,ids,i:0,score:0,streak:0,bestStreak:0,results:[],answered:false,order:ids.map((id,k)=>shuffle([0,1,2,3],rng(seed+k)))};
+  show("play");renderQuestion();
+}
+function renderQuestion(){
+  const q=QQ(G.ids[G.i]),m=MODES[G.mode];
+  G.answered=false;
+  $("slMode").textContent=G.mode==="custom"?reelLabel(G.f):G.mode==="level"?"Level "+G.f.level+" · "+LEVELS[G.f.level-1][0]:m.short;
+  $("slScene").textContent=String(G.i+1).padStart(2,"0")+(G.mode==="sudden"?"":" / "+String(G.ids.length).padStart(2,"0"));
+  $("slScore").textContent=fmt(G.score);
+  $("slStreak").textContent="×"+(1+0.1*Math.min(G.streak,5)).toFixed(1);
+  const eraTxt=q.year?" · "+eraName(eraOf(q.year)):"";
+  $("qCat").textContent=CATS[q.cat]+(q.deep?" · Deep cut":"")+eraTxt+" · "+DIFF[q.diff]+(q.generated?" · from TMDB data":"");
+  $("qText").textContent=q.q;
+  const box=$("answers");box.innerHTML="";
+  G.order[G.i].forEach((oi,k)=>{
+    const b=el("button","ans");b.type="button";b.id="ans-"+k;b.dataset.oi=oi;
+    b.append(el("kbd",null,k+1),el("span",null,q.opts[oi]));
+    b.addEventListener("click",()=>answer(oi));box.appendChild(b);
+  });
+  $("lore").classList.remove("on");
+  startClock(timeFor(q,G.mode));
+  box.querySelector("button")?.focus({preventScroll:true});
+}
+function setLeader(frac,secs){
+  const a=Math.min(.9999,Math.max(0,1-frac))*2*Math.PI;
+  const x=50+48*Math.sin(a),y=50-48*Math.cos(a),large=a>Math.PI?1:0;
+  $("wedge").setAttribute("d",a<=0?"":`M50 50 L50 2 A48 48 0 ${large} 1 ${x.toFixed(2)} ${y.toFixed(2)} Z`);
+  $("leaderNum").textContent=secs;
+}
+function startClock(total){
+  clearInterval(timer);const t0=performance.now();G.tMax=total;G.tLeft=total;setLeader(1,total);
+  timer=setInterval(()=>{const left=Math.max(0,total-(performance.now()-t0)/1000);G.tLeft=left;setLeader(left/total,Math.ceil(left));if(left<=0){clearInterval(timer);answer(-1);}},100);
+}
+function answer(oi){
+  if(!G||G.answered)return;
+  G.answered=true;clearInterval(timer);
+  const q=QQ(G.ids[G.i]),correct=oi===0;let pts=0;
+  if(correct){pts=pointsFor(q.diff,G.tLeft,G.tMax,G.streak);G.streak++;G.bestStreak=Math.max(G.bestStreak,G.streak);}else G.streak=0;
+  G.score+=pts;G.results.push({id:q.id,correct,pts,tLeft:G.tLeft});
+  [...$("answers").children].forEach(b=>{b.disabled=true;const o=+b.dataset.oi;if(o===0)b.classList.add("right");else if(o===oi)b.classList.add("wrong");else b.classList.add("faded");});
+  $("slScore").textContent=fmt(G.score);$("slStreak").textContent="×"+(1+0.1*Math.min(G.streak,5)).toFixed(1);
+  const v=$("verdict");v.textContent=correct?"Correct":(oi===-1?"Time's up":"Not quite");v.className="verdict "+(correct?"good":"bad");
+  $("loreText").textContent=q.lore;
+  const over=(G.mode==="sudden"&&!correct)||G.i===G.ids.length-1;
+  $("ptsLine").textContent=(correct?"":"Answer: "+q.opts[0]+". ")+(correct?"+"+fmt(pts)+" points":"0 points");
+  $("nextBtn").textContent=over?"See the wrap":"Next scene";
+  $("lore").classList.add("on");$("nextBtn").focus({preventScroll:true});
+}
+function next(){
+  if(!G||!G.answered)return;
+  const last=G.results[G.results.length-1];
+  if((G.mode==="sudden"&&!last.correct)||G.i===G.ids.length-1){finish();return;}
+  G.i++;renderQuestion();
+}
+function bump(map,key,ok){if(!key)return;const c=map[key]||[0,0];c[1]++;if(ok)c[0]++;map[key]=c;}
+function finish(){
+  const g=G;G=null;
+  const correctN=g.results.filter(r=>r.correct).length,beforeRank=rankFor(P.xp);
+  P.xp+=g.score;P.games++;P.best=Math.max(P.best,g.score);
+  if(g.mode==="sudden")P.sdBest=Math.max(P.sdBest,correctN);
+  g.results.forEach(r=>{const q=QQ(r.id);bump(P.cats,q.cat,r.correct);q.genres.forEach(x=>bump(P.kg,x,r.correct));bump(P.ke,eraOf(q.year),r.correct);if(r.correct&&q.cat==="dir")P.dirCorrect++;if(r.correct&&q.cat==="cast")P.castCorrect=(P.castCorrect||0)+1;});
+  P.recent=[...(P.recent||[]),...g.results.map(r=>r.id)].slice(-80);
+  let lvlMsg=null;
+  if(g.mode==="level"){
+    const L=g.f.level,stars=Math.max(0,correctN-PASS+1),passed=correctN>=PASS;
+    P.lvlStars[L]=Math.max(P.lvlStars[L]||0,stars);
+    if(passed&&L===P.lvlUnlocked&&L<LEVELS.length)P.lvlUnlocked=L+1;
+    g.passed=passed;
+    lvlMsg=passed?(L<LEVELS.length?"Level "+L+" cleared: "+"★".repeat(stars)+(L+1===P.lvlUnlocked?" · Level "+(L+1)+" unlocked":""):"The Vault is cleared. You are a true archivist."):"Not this time: "+correctN+" of 8. You need "+PASS+" to pass.";
+  }
+  if(g.mode==="daily"){P.dailyDate=todayStr();P.dailyScore=g.score;P.dailyCorrect=correctN;}
+  const got=checkAchievements(g,correctN);
+  saveLocal();syncProfile();postScore();
+  $("rsMode").textContent=(g.mode==="custom"?"Custom Reel: "+reelLabel(g.f):g.mode==="level"?"Career · Level "+g.f.level+" · "+LEVELS[g.f.level-1][0]:MODES[g.mode].name)+" · That's a wrap";
+  const pl=$("rsPass");pl.hidden=!lvlMsg;if(lvlMsg){pl.textContent=lvlMsg;pl.className="passline "+(g.passed?"good":"bad");}
+  $("againBtn").textContent=g.mode==="level"?(g.passed&&g.f.level<LEVELS.length?"Next level":"Try again"):"Play again";
+  $("rsScore").textContent=fmt(g.score);
+  $("rsCorrect").textContent=g.mode==="sudden"?String(correctN):correctN+"/"+g.results.length;
+  $("rsStreak").textContent=g.bestStreak;$("rsXp").textContent="+"+fmt(g.score);
+  const strip=$("rsStrip");strip.innerHTML="";
+  g.results.forEach((r,k)=>{const f=el("div","frame "+(r.correct?"g":"b"),k+1);f.title=QQ(r.id).q;strip.appendChild(f);});
+  const ach=$("rsAch");ach.innerHTML="";
+  if(rankFor(P.xp)>beforeRank){const d=el("div","ach got");d.append(el("b",null,"Promoted to "+RANKS[rankFor(P.xp)][1]),el("span",null,"New billing"));ach.appendChild(d);}
+  got.forEach(k=>ach.appendChild(achCard(k,true,"Unlocked: ")));
+  G_last=g;renderRank("rs");show("result");$("againBtn").focus({preventScroll:true});
+}
+function checkAchievements(g,correctN){
+  const had=new Set(P.ach),got=[];const give=k=>{if(!had.has(k)){had.add(k);got.push(k);}};
+  if(g){
+    give("first");
+    if(g.mode==="feature"&&correctN===10)give("flawless");
+    if(g.results.some(r=>r.correct&&r.tLeft>=12))give("quick");
+    if(g.bestStreak>=5)give("streak5");
+    if(g.mode==="sudden"&&correctN>=15)give("marathon");
+    if(g.mode==="daily")give("daily");
+    if(g.mode==="daily"&&correctN===7)give("perfectDaily");
+  }
+  if(Object.keys(CATS).every(c=>P.cats[c]&&P.cats[c][0]>0))give("polymath");
+  if(ERAS.every(e=>P.ke[e.id]&&P.ke[e.id][0]>0))give("eras");
+  if(P.dirCorrect>=10)give("auteur");
+  if(rankFor(P.xp)>=4)give("leading");
+  const cleared=L=>(P.lvlStars[L]||0)>0;
+  if(cleared(6))give("climber");if(cleared(9))give("cinephileLvl");if(cleared(12))give("vault");
+  if((P.castCorrect||0)>=10)give("ensemble");
+  const nRated=Object.keys(P.ratings).length;
+  if(nRated>=25)give("taste25");if(nRated>=100)give("taste100");
+  P.ach=[...had];return got;
+}
+function achCard(k,got,prefix){const a=ACHS.find(x=>x[0]===k);const d=el("div","ach "+(got?"got":"locked"));d.append(el("b",null,(prefix||"")+a[1]),el("span",null,a[2]));return d;}
+function shareText(g){
+  const n=g.results.filter(r=>r.correct).length;
+  const title=g.mode==="daily"?"Daily Reel "+todayStr():g.mode==="level"?"Career Level "+g.f.level+" ("+LEVELS[g.f.level-1][0]+")":(g.mode==="custom"?"Custom Reel: "+reelLabel(g.f):MODES[g.mode].name);
+  return "QUIZTAKE · "+title+"\n"+g.results.map(r=>r.correct?"🟩":"🟥").join("")+"\n"+(g.mode==="sudden"?n+" in a row":n+"/"+g.results.length)+" · "+fmt(g.score)+" pts\nThink you're a cinéphile? Prove it.";
+}
+
+/* ---------- Custom Reel setup ---------- */
+function chipGroup(boxId,items,key){
+  const box=$(boxId);box.innerHTML="";
+  [["",  "Any"],...items].forEach(([v,n])=>{
+    const b=el("button","chip",n);b.type="button";b.id=boxId+"-"+(v||"any");
+    b.setAttribute("aria-pressed",String((F[key]||"")===v));
+    b.addEventListener("click",()=>{F[key]=v||null;renderSetup();});
+    box.appendChild(b);
+  });
+}
+const PRESETS=[["Horror night",{gen:"ho"}],["Silent & early sound",{era:"silent"}],["Westerns",{gen:"we"}],["80s & 90s sci-fi",{era:"blockbuster",gen:"sf"}],["Golden Age",{era:"golden"}],["Streaming age",{era:"streaming"}]];
+function renderSetup(){
+  const pb=$("presets");pb.innerHTML="";
+  PRESETS.forEach(([n,f],i)=>{const b=el("button","chip",n);b.type="button";b.id="preset-"+i;b.addEventListener("click",()=>{F={cat:null,era:null,gen:null,...f};renderSetup();});pb.appendChild(b);});
+  chipGroup("fCat",Object.entries(CATS),"cat");
+  chipGroup("fEra",ERAS.map(e=>[e.id,e.name+" ("+e.from+(e.to>2050?"+":"–"+String(e.to).slice(2))+")"]),"era");
+  chipGroup("fGen",Object.entries(GENRES),"gen");
+  const n=allQ().filter(q=>matches(q,F)).length;
+  $("fCount").innerHTML="";$("fCount").append(String(n),el("small",null,n===1?"question matches":"questions match"));
+  $("fStart").disabled=n<4;$("fStart").style.opacity=n<4?.5:1;
+  $("fStart").textContent=n<4?"Not enough questions":"Start the reel ("+Math.min(10,n)+" questions)";
+}
+$("fStart").addEventListener("click",()=>startGame("custom",{...F}));
+$("fReset").addEventListener("click",()=>{F={cat:null,era:null,gen:null};renderSetup();});
+
+/* ============ POSTERS ============ */
+const PAL={
+  dr:["#2b3a55","#0f1626","#e8d5b7"], co:["#f2c14e","#e4572e","#fff4dc"], ac:["#d1495b","#3d0c11","#ffd166"],
+  sf:["#0b3c5d","#021019","#7fdbff"], fa:["#5b3e96","#1b0f33","#f6d6ff"], ho:["#3a0a0a","#050101","#ff3b30"],
+  th:["#1f2d2b","#060b0a","#c7f9cc"], cr:["#2d2a26","#0b0a09","#e0a458"], an:["#38b2ac","#234e70","#fffbea"],
+  we:["#c96d2e","#3f1d0b","#ffe8c2"], ro:["#c94f7c","#3b0d22","#ffd6e5"], mu:["#7b2cbf","#240046","#ffd60a"], wa:["#5c6046","#1c1d14","#e9e4c9"]
+};
+function posterSVG(f){
+  const g=f.genres[0],p=PAL[g]||PAL.dr,r=rng(hash(f.id)),W=200,H=300;let s="";
+  const c=(n)=>Math.round(n*100)/100;
+  if(g==="sf"){const cx=c(40+r()*120),cy=c(70+r()*80);for(let i=1;i<=6;i++)s+=`<circle cx="${cx}" cy="${cy}" r="${i*22}" fill="none" stroke="${p[2]}" stroke-opacity="${c(.5-i*.06)}" stroke-width="1.2"/>`;s+=`<circle cx="${cx}" cy="${cy}" r="14" fill="${p[2]}"/>`;for(let i=0;i<40;i++)s+=`<circle cx="${c(r()*W)}" cy="${c(r()*H)}" r="${c(r()*1.2+.3)}" fill="#fff" fill-opacity="${c(r()*.8)}"/>`;}
+  else if(g==="ho"){s+=`<circle cx="${c(60+r()*80)}" cy="${c(70+r()*40)}" r="${c(40+r()*20)}" fill="${p[2]}" fill-opacity=".85"/>`;for(let i=0;i<9;i++){const x=c(i*25+r()*10);s+=`<rect x="${x}" y="0" width="${c(4+r()*6)}" height="${c(60+r()*170)}" fill="#000" fill-opacity=".7"/>`;}}
+  else if(g==="we"){s+=`<circle cx="100" cy="${c(150+r()*30)}" r="55" fill="${p[2]}" fill-opacity=".9"/>`;for(let i=0;i<7;i++)s+=`<rect x="0" y="${190+i*16}" width="200" height="${8-i*.6}" fill="${p[1]}" fill-opacity="${c(.6+i*.05)}"/>`;}
+  else if(g==="ro"){for(let i=0;i<3;i++)s+=`<circle cx="${c(70+i*30+r()*10)}" cy="${c(110+r()*40)}" r="${c(45+r()*15)}" fill="${p[2]}" fill-opacity=".28"/>`;}
+  else if(g==="co"){for(let i=0;i<34;i++)s+=`<circle cx="${c(r()*W)}" cy="${c(r()*200)}" r="${c(4+r()*12)}" fill="${[p[2],p[1],"#2ec4b6"][i%3]}" fill-opacity=".85"/>`;}
+  else if(g==="cr"||g==="ac"){for(let i=-6;i<14;i++)s+=`<rect x="${i*28}" y="-40" width="12" height="420" fill="${p[2]}" fill-opacity="${c(.08+r()*.18)}" transform="rotate(${g==="cr"?24:-30} 100 150)"/>`;s+=`<rect x="0" y="${c(100+r()*60)}" width="200" height="6" fill="${p[2]}"/>`;}
+  else if(g==="th"){const cx=c(70+r()*60),cy=c(100+r()*40);for(let i=0;i<8;i++)s+=`<circle cx="${cx}" cy="${cy}" r="${c(10+i*13)}" fill="none" stroke="${p[2]}" stroke-opacity="${c(.75-i*.08)}" stroke-dasharray="${c(4+r()*30)} ${c(4+r()*16)}" stroke-width="2"/>`;}
+  else if(g==="an"){for(let i=0;i<12;i++)s+=`<circle cx="${c(r()*W)}" cy="${c(r()*210)}" r="${c(12+r()*30)}" fill="${p[2]}" fill-opacity="${c(.15+r()*.4)}"/>`;}
+  else if(g==="fa"){for(let i=0;i<26;i++){const x=c(r()*W),y=c(r()*210),z=c(2+r()*5);s+=`<path d="M${x} ${c(y-z*2)} L${c(x+z*.5)} ${c(y-z*.5)} L${c(x+z*2)} ${y} L${c(x+z*.5)} ${c(y+z*.5)} L${x} ${c(y+z*2)} L${c(x-z*.5)} ${c(y+z*.5)} L${c(x-z*2)} ${y} L${c(x-z*.5)} ${c(y-z*.5)} Z" fill="${p[2]}" fill-opacity="${c(.4+r()*.6)}"/>`;}}
+  else if(g==="mu"){for(let i=0;i<9;i++){let d=`M0 ${40+i*20}`;for(let x=0;x<=200;x+=20)d+=` Q${x+10} ${c(40+i*20+(r()-.5)*40)} ${x+20} ${40+i*20}`;s+=`<path d="${d}" fill="none" stroke="${p[2]}" stroke-opacity="${c(.25+r()*.5)}" stroke-width="2"/>`;}}
+  else if(g==="wa"){for(let i=0;i<18;i++){const a=i*20*Math.PI/180;s+=`<line x1="100" y1="${c(120)}" x2="${c(100+300*Math.cos(a))}" y2="${c(120+300*Math.sin(a))}" stroke="${p[2]}" stroke-opacity=".14" stroke-width="10"/>`;}s+=`<circle cx="100" cy="120" r="26" fill="${p[2]}" fill-opacity=".85"/>`;}
+  else {s+=`<rect x="0" y="${c(90+r()*50)}" width="200" height="${c(30+r()*30)}" fill="${p[2]}" fill-opacity=".85"/><circle cx="${c(50+r()*100)}" cy="${c(80+r()*20)}" r="18" fill="${p[2]}" fill-opacity=".6"/>`;}
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="g${f.id.length}${hash(f.id)%999}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${p[0]}"/><stop offset="1" stop-color="${p[1]}"/></linearGradient></defs><rect width="200" height="300" fill="url(#g${f.id.length}${hash(f.id)%999})"/>${s}</svg>`;
+}
+function posterEl(f,cls){
+  const d=el("div","poster"+(cls?" "+cls:""));d.dataset.id=f.id;
+  d.innerHTML=posterSVG(f);
+  const top=el("div","ptop");top.append(el("span",null,f.genres.map(x=>GENRES[x]).join(" · ")),el("span",null,cname(f.country)));
+  const t=el("div","ptext");const h=el("p","ptitle",f.title);h.style.fontSize=(f.title.length>34?26:f.title.length>20?34:f.title.length>11?44:56)+"px";
+  const meta=el("div","pmeta",f.year+(f.director?" · "+f.director:"")+(f.rating?" · TMDB "+f.rating.toFixed(1):""));
+  t.append(h,meta);
+  if(f.tmdb&&!f.director)ensureDetails(f).then(()=>{meta.textContent=f.year+(f.director?" · "+f.director:"")+(f.rating?" · TMDB "+f.rating.toFixed(1):"");top.lastChild.textContent=cname(f.country);});
+  d.append(top,t,el("div","stamp like","LIKE"),el("div","stamp nope","PASS"),el("div","stamp unseen","NOT SEEN"));
+  applyPoster(d,f,"w500");
+  return d;
+}
+function miniPoster(f){const m=el("div","mini");m.innerHTML=posterSVG(f);applyPoster(m,f,"w185");return m;}
+
+/* ---------- Real posters (local copy only, user's own TMDB key) ---------- */
+const LOCAL=!window.claude;
+let TMDB_KEY="";try{TMDB_KEY=localStorage.getItem("quiztake.tmdb")||"";}catch(e){}
+let PCACHE={};try{PCACHE=JSON.parse(localStorage.getItem("quiztake.posters")||"{}");}catch(e){}
+const PENDING={};
+function savePCache(){try{localStorage.setItem("quiztake.posters",JSON.stringify(PCACHE));}catch(e){}}
+async function tmdbGet(path,params){
+  const bearer=TMDB_KEY.length>40;
+  const u=new URL("https://api.themoviedb.org/3"+path);
+  for(const [k,v] of Object.entries(params||{}))u.searchParams.set(k,v);
+  if(!bearer)u.searchParams.set("api_key",TMDB_KEY);
+  const r=await fetch(u,{headers:bearer?{Authorization:"Bearer "+TMDB_KEY,accept:"application/json"}:{accept:"application/json"}});
+  if(r.status===401)throw new Error("auth");
+  if(!r.ok)throw new Error("http");
+  return r.json();
+}
+async function tmdbSearch(f,withYear){
+  const p={query:f.title,include_adult:"false"};if(withYear)p.primary_release_year=f.year;
+  const j=await tmdbGet("/search/movie",p);
+  const res=(j.results||[]).filter(x=>x.poster_path);
+  return res.find(x=>(x.release_date||"").slice(0,4)===String(f.year))||res[0]||null;
+}
+function posterPath(f){
+  if(f.id in PCACHE)return Promise.resolve(PCACHE[f.id]);
+  if(!LOCAL||!TMDB_KEY)return Promise.resolve(null);
+  if(PENDING[f.id])return PENDING[f.id];
+  return PENDING[f.id]=(async()=>{
+    try{const hit=(await tmdbSearch(f,true))||(await tmdbSearch(f,false));PCACHE[f.id]=hit?hit.poster_path:"";savePCache();return PCACHE[f.id];}
+    catch(e){if(e.message==="auth"){TMDB_KEY="";setTmdbStatus("TMDB didn't accept that key. Check it and save it again.");}return null;}
+    finally{delete PENDING[f.id];}
+  })();
+}
+function applyPoster(card,f,size){
+  if(!LOCAL||!TMDB_KEY)return;
+  posterPath(f).then(p=>{
+    if(!p)return;
+    const img=new Image();img.alt="";img.className="realposter";img.decoding="async";
+    img.onload=()=>card.classList.add("hasreal");
+    img.src="https://image.tmdb.org/t/p/"+(size||"w500")+p;
+    card.insertBefore(img,card.children[1]||null);
+  });
+}
+/* ---------- TMDB catalogue: top-rated 1,000 + most-voted 1,000 (local copy only) ---------- */
+const GENRE_MAP={28:"ac",12:"ac",16:"an",35:"co",80:"cr",99:"dr",18:"dr",10751:"co",14:"fa",36:"wa",27:"ho",10402:"mu",9648:"th",10749:"ro",878:"sf",10770:"dr",53:"th",10752:"wa",37:"we"};
+const slugOf=(t,y)=>(t+"-"+y).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+let DETAILS={};try{DETAILS=JSON.parse(localStorage.getItem("quiztake.details")||"{}");}catch(e){}
+let catalogueLoading=false;
+function addFilms(rows){
+  let added=0;
+  rows.forEach(([tid,title,year,genres,rating,votes,poster])=>{
+    if(!title||!year)return;
+    const id=slugOf(title,year),ex=FILM_BY_ID[id];
+    if(ex){ex.tmdb=tid;ex.rating=rating;ex.votes=votes;if(poster&&!PCACHE[id])PCACHE[id]=poster;return;}
+    const d=DETAILS[id]||["",""];
+    const f={id,title,year,director:d[0],genres:genres.length?genres:["dr"],country:d[1],reception:"",tmdb:tid,rating,votes};
+    FILMS.push(f);FILM_BY_ID[id]=f;if(poster)PCACHE[id]=poster;added++;
+  });
+  return added;
+}
+async function loadTmdbCatalogue(force){
+  if(!LOCAL||!TMDB_KEY||catalogueLoading)return;
+  let cache=null;try{cache=JSON.parse(localStorage.getItem("quiztake.catalogue")||"null");}catch(e){}
+  if(cache&&!force&&Date.now()-cache.t<7*864e5){addFilms(cache.rows);afterCatalogue();return;}
+  catalogueLoading=true;
+  const jobs=[];
+  for(let pg=1;pg<=50;pg++){jobs.push(["/movie/top_rated",{page:pg}]);jobs.push(["/discover/movie",{sort_by:"vote_count.desc",include_adult:"false",page:pg}]);}
+  const rows=[];let done=0;
+  try{
+    for(let i=0;i<jobs.length;i+=10){
+      const batch=await Promise.all(jobs.slice(i,i+10).map(([p,q])=>tmdbGet(p,q).catch(e=>{if(e.message==="auth")throw e;return{results:[]};})));
+      batch.forEach(j=>(j.results||[]).forEach(r=>{if(!r.release_date)return;rows.push([r.id,r.title,+r.release_date.slice(0,4),[...new Set((r.genre_ids||[]).map(x=>GENRE_MAP[x]).filter(Boolean))],Math.round((r.vote_average||0)*10)/10,r.vote_count||0,r.poster_path||""]);}));
+      done+=batch.length;setTmdbStatus("Loading films from TMDB… "+Math.round(100*done/jobs.length)+"%");
+    }
+    try{localStorage.setItem("quiztake.catalogue",JSON.stringify({t:Date.now(),rows}));}catch(e){}
+    addFilms(rows);afterCatalogue();
+  }catch(e){setTmdbStatus(e.message==="auth"?"TMDB didn't accept that key. Check it and save it again.":"Couldn't reach TMDB. Check your connection and save the key again.");}
+  finally{catalogueLoading=false;}
+}
+function afterCatalogue(){
+  savePCache();buildGenSpecs(true);setTimeout(harvestDetails,1500);
+  setTmdbStatus(FILMS.length.toLocaleString("en-GB")+" films in the deck, with posters from TMDB.");
+  deckOrder=[];
+  if($("s-rate").classList.contains("on")){buildDeck();renderDeck();}
+  if($("s-home").classList.contains("on"))renderHome();
+}
+const DPENDING={};
+let detSaveT=null;
+function saveDetails(){clearTimeout(detSaveT);detSaveT=setTimeout(()=>{try{localStorage.setItem("quiztake.details",JSON.stringify(DETAILS));}catch(e){}},2000);}
+function cleanChar(c){
+  if(!c)return"";c=c.replace(/\s*\((voice|uncredited|archive footage)\)/gi,"").split(" / ")[0].trim();
+  if(c.length<2||/\b(self|himself|herself|themselves|narrator)\b/i.test(c))return"";return c;
+}
+const hasCast=f=>DETAILS[f.id]&&DETAILS[f.id][3]===2;
+function ensureDetails(f){
+  if(!f||!f.tmdb||hasCast(f))return Promise.resolve(f);
+  if(DPENDING[f.id])return DPENDING[f.id];
+  return DPENDING[f.id]=tmdbGet("/movie/"+f.tmdb,{append_to_response:"credits"}).then(d=>{
+    const dir=((d.credits&&d.credits.crew)||[]).filter(c=>c.job==="Director").map(c=>c.name).slice(0,3).join(", ")||"Unknown director";
+    if(!f.director)f.director=dir;
+    if(!f.country)f.country=((d.production_countries||[])[0]||{}).iso_3166_1||"";
+    const cast=((d.credits&&d.credits.cast)||[]).slice(0,15).map(c=>[c.name,cleanChar(c.character),Math.round(c.popularity||0)]);
+    DETAILS[f.id]=[f.director,f.country,cast,2];saveDetails();
+    return f;
+  }).catch(()=>f).finally(()=>{delete DPENDING[f.id];});
+}
+
+/* ---------- Question generator (local copy only) ---------- */
+let harvesting=false,ACTORS={};
+async function harvestDetails(){
+  if(!LOCAL||!TMDB_KEY||harvesting)return;
+  const todo=FILMS.filter(f=>f.tmdb&&!hasCast(f));
+  if(!todo.length){buildGenSpecs();return;}
+  harvesting=true;let done=0;const total=todo.length;
+  for(let i=0;i<todo.length;i+=8){
+    await Promise.all(todo.slice(i,i+8).map(f=>ensureDetails(f)));
+    done=Math.min(total,i+8);
+    setBankNote("Building questions from TMDB… "+Math.round(100*done/total)+"%");
+    if(done%400<8)buildGenSpecs(true);
+    await new Promise(r=>setTimeout(r,120));
+  }
+  harvesting=false;saveDetails();buildGenSpecs();
+}
+function filmDiff(f){const v=f.votes||0;return v>15000?1:v>8000?2:v>3000?3:v>1000?4:5;}
+function buildGenSpecs(quiet){
+  const specs=[];
+  /* actor index across the catalogue: name -> appearances, for fame and "early role" checks */
+  const AX={};
+  FILMS.forEach(f=>{const d=DETAILS[f.id];if(!d||!d[2])return;d[2].forEach((c,i)=>{(AX[c[0]]=AX[c[0]]||{apps:[],pop:0}).apps.push({film:f.id,year:f.year,i});AX[c[0]].pop=Math.max(AX[c[0]].pop,c[2]||0);});});
+  const famous=n=>AX[n]&&(AX[n].apps.length>=3||AX[n].pop>=15);
+  const median=a=>{const s=a.slice().sort((x,y)=>x-y);return s[Math.floor(s.length/2)];};
+  ACTORS=AX;
+  FILMS.forEach(f=>{
+    const d=DETAILS[f.id];if(!f.tmdb||!d||!d[2])return;
+    const base=filmDiff(f),cast=d[2],gen=f.genres,y=f.year;
+    const add=(tpl,k,cat,diff)=>specs.push({id:"g:"+f.id+":"+tpl+":"+k,film:f.id,tpl,k,cat,diff:Math.max(1,Math.min(5,diff)),year:y,genres:gen});
+    if(f.director&&f.director!=="Unknown director")add("dir",0,"dir",base);
+    add("year",0,"hist",base+1);
+    if(cast.length>=3)add("trio",0,"cast",base);
+    cast.slice(0,6).forEach((c,k)=>{if(c[1]){add("role",k,"act",base+(k>1?1:0)+(k>3?1:0));add("char",k,"char",base+1+(k>1?1:0));}});
+    if(new Set(FILMS.filter(x=>x.year>y).map(x=>x.year)).size>=3)add("first",0,"hist",base+1);
+    /* Deep cut: three famous actors, at least one in a small (billed 6th+) or early role */
+    const fam=cast.map((c,i)=>({n:c[0],i})).filter(c=>famous(c.n));
+    const deep=fam.filter(c=>{const a=AX[c.n].apps,ys=a.map(x=>x.year);const early=a.length>=3&&y<=Math.min(...ys)&&median(ys)-y>=6;c.why=c.i>=5?"small":early?"early":"";if(c.why==="early")c.gap=median(ys)-y;return c.why;})
+      .sort((a,b)=>(AX[b.n].apps.length+AX[b.n].pop/10)-(AX[a.n].apps.length+AX[a.n].pop/10));
+    if(deep.length&&fam.length>=3){
+      const D=deep[0],rest=fam.filter(c=>c.n!==D.n).slice(0,2);
+      if(rest.length===2){
+        const sp={id:"g:"+f.id+":deep:0",film:f.id,tpl:"deep",k:0,cat:"cast",diff:Math.max(4,Math.min(5,base+2)),year:y,genres:gen,
+          names:shuffle([D.n,...rest.map(c=>c.n)],rng(hash(f.id))),deepName:D.n,why:D.why,bill:D.i+1,gap:D.gap||0};
+        specs.push(sp);
+      }
+    }
+  });
+  GENSPECS=specs;GENBYID=Object.fromEntries(specs.map(q=>[q.id,q]));QCACHE={};
+  const nDeep=specs.filter(x=>x.tpl==="deep").length;
+  const md=$("m-deep");if(md){md.hidden=!nDeep;$("deepMeta").textContent=nDeep.toLocaleString("en-GB")+" trios · 10 per game · 20 s each";}
+  setBankNote((BANK.length+specs.length).toLocaleString("en-GB")+" questions: "+BANK.length+" hand-written, "+specs.length.toLocaleString("en-GB")+" generated from TMDB data, including "+nDeep.toLocaleString("en-GB")+" Deep cut actor trios"+(harvesting?" (still building…)":"."));
+}
+function setBankNote(t){const n=$("bankNote");if(n){n.hidden=false;n.textContent=t;}}
+function lineup(f){const d=DETAILS[f.id];return d&&d[2]?d[2].slice(0,3).map(c=>c[0]).join(", "):"";}
+function materialize(sp){
+  const f=FILM_BY_ID[sp.film],d=DETAILS[sp.film],cast=d[2],r=rng(hash(sp.id));
+  /* pick n distinct options, trying the closest pool first (same film, then similar films, then anything) */
+  const pickN=(pools,n,bad)=>{const out=[];for(const pool of pools){for(const x of shuffle(pool,r)){if(out.length>=n)return out;if(x&&!bad.has(x)){out.push(x);bad.add(x);}}}return out;};
+  const T=x=>x.title+" ("+x.year+")";
+  const near=FILMS.filter(x=>x!==f&&Math.abs(x.year-f.year)<=15&&x.genres.some(g=>f.genres.includes(g)));
+  let lore=T(f)+(f.director?", directed by "+f.director:"")+". Top-billed: "+lineup(f)+"."+(f.rating?" TMDB audience score: "+f.rating.toFixed(1)+"/10.":"");
+  let q,opts=[];
+  if(sp.tpl==="dir"){
+    q="Who directed "+T(f)+"?";
+    const first=f.director.split(", ")[0];
+    const ok=x=>x&&x!=="Unknown director"&&!x.includes(first);
+    opts=[f.director,...pickN([near.map(x=>x.director).filter(ok),FILMS.map(x=>x.director).filter(ok)],3,new Set([f.director]))];
+  }else if(sp.tpl==="year"){
+    q="In which year was "+f.title+(f.director&&f.director!=="Unknown director"?", directed by "+f.director+",":"")+" released?";
+    const ys=new Set([f.year]);const cand=shuffle([-6,-4,-3,-2,-1,1,2,3,4,6].map(o=>f.year+o).filter(y=>y<=2026),r);
+    opts=[String(f.year),...cand.filter(y=>!ys.has(y)).slice(0,3).map(String)];
+  }else if(sp.tpl==="trio"){
+    const three=cast.slice(0,3).map(c=>c[0]);
+    q="Which film stars "+three[0]+", "+three[1]+" and "+three[2]+"?";
+    const hasAll=x=>{const c=(DETAILS[x.id]&&DETAILS[x.id][2]||[]).map(c=>c[0]);return three.every(a=>c.includes(a));};
+    const shared=FILMS.filter(x=>x!==f&&DETAILS[x.id]&&DETAILS[x.id][2]&&DETAILS[x.id][2].some(c=>three.includes(c[0]))&&!hasAll(x));
+    opts=[T(f),...pickN([shared.map(T),near.filter(x=>!hasAll(x)).map(T),FILMS.filter(x=>x!==f&&!hasAll(x)).map(T)],3,new Set([T(f)]))];
+  }else if(sp.tpl==="deep"){
+    const three=sp.names;
+    q="Deep cut: which film features all three of "+three[0]+", "+three[1]+" and "+three[2]+"?";
+    const castOf=x=>(DETAILS[x.id]&&DETAILS[x.id][2]||[]).map(c=>c[0]);
+    const nShared=x=>{const c=castOf(x);return three.filter(a=>c.includes(a)).length;};
+    const others=FILMS.filter(x=>x!==f&&DETAILS[x.id]&&DETAILS[x.id][2]);
+    const two=others.filter(x=>nShared(x)===2),one=others.filter(x=>nShared(x)===1);
+    opts=[T(f),...pickN([two.map(T),one.map(T),near.filter(x=>nShared(x)<3).map(T)],3,new Set([T(f)]))];
+    const role=(cast.find(c=>c[0]===sp.deepName)||[])[1];
+    lore=sp.deepName+(sp.why==="small"?" is the deep cut here: billed number "+sp.bill+(role?", playing "+role:"")+".":" is the deep cut here: this came "+sp.gap+" years before the middle of their career in our catalogue"+(role?", playing "+role:"")+".")+" "+lore;
+  }else if(sp.tpl==="role"){
+    const c=cast[sp.k];q="Who played "+c[1]+" in "+T(f)+"?";
+    const others=cast.filter((x,i)=>i!==sp.k).map(x=>x[0]);
+    opts=[c[0],...pickN([others,near.flatMap(x=>(DETAILS[x.id]&&DETAILS[x.id][2]||[]).map(y=>y[0]))],3,new Set([c[0]]))];
+  }else if(sp.tpl==="char"){
+    const c=cast[sp.k];q="In "+T(f)+", which character does "+c[0]+" play?";
+    const others=cast.filter((x,i)=>i!==sp.k&&x[1]).map(x=>x[1]);
+    opts=[c[1],...pickN([others,near.flatMap(x=>(DETAILS[x.id]&&DETAILS[x.id][2]||[]).map(y=>y[1]).filter(Boolean))],3,new Set([c[1]]))];
+  }else{
+    q="Which of these films came out first?";
+    const win=sp.diff>=4?4:12;
+    const pools=[FILMS.filter(x=>x.year>f.year&&x.year<=f.year+win),FILMS.filter(x=>x.year>f.year)];
+    const picks=[];const ys=new Set([f.year]);
+    for(const pool of pools)for(const x of shuffle(pool,r)){if(picks.length>=3)break;if(!ys.has(x.year)){ys.add(x.year);picks.push(x);}}
+    opts=[T(f),...picks.map(T)];
+  }
+  while(opts.length<4)opts.push("None of these");
+  return{id:sp.id,cat:sp.cat,diff:sp.diff,year:sp.year,genres:sp.genres,q,opts:opts.slice(0,4),lore,generated:true,deep:sp.tpl==="deep"};
+}
+let REGION=null;try{REGION=new Intl.DisplayNames(["en"],{type:"region"});}catch(e){}
+function cname(k){if(!k)return"";return COUNTRIES[k]||(REGION?REGION.of(k):k);}
+
+function setTmdbStatus(msg){const st=$("tmdbStatus");if(st)st.textContent=msg;}
+function initTmdbBox(){
+  if(!LOCAL)return;
+  $("tmdbBox").hidden=false;$("tmdbAttr").hidden=false;
+  $("posterNote").textContent="With your TMDB key saved, real posters load from TMDB. Films TMDB can't match keep their designed card.";
+  if(TMDB_KEY){$("tmdbKey").value=TMDB_KEY;setTmdbStatus("Key saved. Posters load as you swipe and are remembered on this computer.");loadTmdbCatalogue();}
+  $("tmdbSave").addEventListener("click",()=>{
+    const k=$("tmdbKey").value.trim();if(!k){setTmdbStatus("Paste a key first.");return;}
+    TMDB_KEY=k;try{localStorage.setItem("quiztake.tmdb",k);}catch(e){}
+    setTmdbStatus("Key saved. Loading posters…");renderDeck();loadTmdbCatalogue(true);
+  });
+  $("tmdbClear").addEventListener("click",()=>{TMDB_KEY="";$("tmdbKey").value="";try{localStorage.removeItem("quiztake.tmdb");}catch(e){}setTmdbStatus("Key removed. Back to designed cards.");renderDeck();});
+}
+
+/* ============ RATE ============ */
+let deckOrder=[];
+function buildDeck(){
+  const unrated=FILMS.filter(f=>!(f.id in P.ratings));
+  // spread eras so the first cards cover different decades
+  const byEra={};shuffle(unrated).forEach(f=>{(byEra[eraOf(f.year)]=byEra[eraOf(f.year)]||[]).push(f);});
+  const lists=Object.values(byEra);deckOrder=[];
+  while(lists.some(l=>l.length))lists.forEach(l=>{if(l.length)deckOrder.push(l.shift().id);});
+}
+function renderDeck(){
+  const deck=$("deck");deck.innerHTML="";
+  deckOrder=deckOrder.filter(id=>!(id in P.ratings));
+  if(!deckOrder.length){const d=el("div","ratedone");d.textContent="You've rated every film in the catalogue. See your taste analysis in Your Lore.";deck.appendChild(d);}
+  else{
+    if(deckOrder[1])deck.appendChild(posterEl(FILM_BY_ID[deckOrder[1]],"behind"));
+    const top=posterEl(FILM_BY_ID[deckOrder[0]]);top.id="topCard";top.tabIndex=0;top.setAttribute("aria-label",FILM_BY_ID[deckOrder[0]].title+", "+FILM_BY_ID[deckOrder[0]].year+". Use the buttons or arrow keys to rate.");
+    deck.appendChild(top);attachDrag(top);
+  }
+  renderRateStats();
+  deckOrder.slice(0,6).forEach(id=>{posterPath(FILM_BY_ID[id]);ensureDetails(FILM_BY_ID[id]);});
+}
+function renderRateStats(){
+  const vals=Object.values(P.ratings);
+  $("rtRated").textContent=vals.length;$("rtLiked").textContent=vals.filter(v=>v===1).length;
+  $("rtLeft").textContent=FILMS.filter(f=>!(f.id in P.ratings)).length;
+  $("rtTypeText").textContent=cinemaType().text;
+}
+function attachDrag(card){
+  let sx=0,sy=0,dx=0,dy=0,drag=false;
+  const st=card.querySelectorAll(".stamp");
+  card.addEventListener("pointerdown",e=>{drag=true;sx=e.clientX;sy=e.clientY;dx=dy=0;card.setPointerCapture(e.pointerId);card.classList.remove("snap");card.style.cursor="grabbing";});
+  card.addEventListener("pointermove",e=>{if(!drag)return;dx=e.clientX-sx;dy=e.clientY-sy;card.style.transform=`translate(${dx}px,${dy}px) rotate(${dx/18}deg)`;
+    st[0].style.opacity=Math.max(0,Math.min(1,dx/110));st[1].style.opacity=Math.max(0,Math.min(1,-dx/110));st[2].style.opacity=Math.abs(dx)<60?Math.max(0,Math.min(1,dy/130)):0;});
+  const end=()=>{if(!drag)return;drag=false;card.style.cursor="";
+    if(dx>110)rate(1);else if(dx<-110)rate(-1);else if(dy>130&&Math.abs(dx)<80)rate(0);
+    else{card.classList.add("snap");card.style.transform="";st.forEach(s=>s.style.opacity=0);}};
+  card.addEventListener("pointerup",end);card.addEventListener("pointercancel",end);
+}
+let rating=false;
+function rate(v){
+  if(rating||!deckOrder.length)return;
+  const card=$("topCard");if(!card)return;rating=true;
+  const id=deckOrder[0];
+  P.ratings[id]=v;P.rateLog.push(id);if(P.rateLog.length>30)P.rateLog.shift();
+  const st=card.querySelectorAll(".stamp");st.forEach(s=>s.style.opacity=0);st[v===1?0:v===-1?1:2].style.opacity=1;
+  card.classList.add("fly");
+  card.style.transform=v===0?"translate(0,520px) rotate(0deg)":`translate(${v*640}px,${-40}px) rotate(${v*28}deg)`;card.style.opacity="0";
+  const got=checkAchievements(null,0);got.forEach(k=>toast("Achievement unlocked: "+ACHS.find(a=>a[0]===k)[1]));
+  saveLocal();scheduleSync();
+  const n=Object.keys(P.ratings).length;if(!got.length&&n%10===0)toast(n+" films rated. Your taste profile has been updated.");
+  setTimeout(()=>{rating=false;deckOrder.shift();renderDeck();$("topCard")?.focus({preventScroll:true});},280);
+}
+function undoRate(){
+  const id=P.rateLog.pop();if(!id){toast("Nothing to undo.");return;}
+  delete P.ratings[id];deckOrder=[id,...deckOrder.filter(x=>x!==id)];saveLocal();scheduleSync();renderDeck();
+}
+$("rLike").addEventListener("click",()=>rate(1));
+$("rNope").addEventListener("click",()=>rate(-1));
+$("rUnseen").addEventListener("click",()=>rate(0));
+$("rUndo").addEventListener("click",undoRate);
+$("rToLore").addEventListener("click",()=>show("lore"));
+initTmdbBox();
+
+/* ============ TASTE ANALYSIS ============ */
+function tasteStats(ratings){
+  const gen={},era={},dir={},ctry={},rec={};let liked=0,seen=0;
+  for(const [id,v] of Object.entries(ratings)){
+    const f=FILM_BY_ID[id];if(!f||v===0)continue;seen++;if(v===1)liked++;
+    const add=(m,k)=>{const c=m[k]||{l:0,d:0};if(v===1)c.l++;else c.d++;m[k]=c;};
+    f.genres.forEach(g=>add(gen,g));add(era,eraOf(f.year));f.director.split(", ").forEach(d=>{if(d&&d!=="Unknown director")add(dir,d);});if(f.country)add(ctry,f.country);if(!f.tmdb||f.reception)add(rec,f.reception||"a");
+  }
+  return{gen,era,dir,ctry,rec,liked,seen};
+}
+/* Confidence-weighted affinity, on an absolute scale. Each group starts with PRIOR imaginary votes split
+   50/50, so it needs real votes to move: 1 of 1 barely moves, 21 of 25 moves a lot.
+   Green = liked more than passed, red = passed more than liked. "Haven't seen it" never counts.
+   Result: -1 (all passed, many votes) to +1 (all liked, many votes). */
+const PRIOR=5;const BASE=.5;
+function weighted(c,base){const n=c?c.l+c.d:0;return ((c?c.l:0)+PRIOR*base)/(n+PRIOR);}
+const aff=c=>{if(!c)return 0;return (weighted(c,BASE)-BASE)/BASE;};
+function cinemaType(){
+  const t=tasteStats(P.ratings);
+  if(t.seen<8)return{text:"Rate "+(8-t.seen)+" more film"+(8-t.seen===1?"":"s")+" you've seen to reveal it.",ready:false};
+  const rank=(m,min)=>Object.entries(m).filter(([,c])=>c.l+c.d>=min).sort((a,b)=>(aff(b[1])-aff(a[1]))||((b[1].l)-(a[1].l)));
+  const g=rank(t.gen,2),e=rank(t.era,2);
+  if(!g.length||aff(g[0][1])<=0)return{text:"A tough critic: you've passed on more than you've liked so far. Keep rating to find what wins you over.",ready:true};
+  let s=GENRES[g[0][0]]+(g[1]&&aff(g[1][1])>0?" and "+GENRES[g[1][0]]:"");
+  if(e.length&&aff(e[0][1])>0){const er=ERAS.find(x=>x.id===e[0][0]);s+=", with a soft spot for films from "+er.from+(er.to>2050?" onwards":"–"+er.to);}
+  return{text:s+".",ready:true};
+}
+function affRows(box,m,labelFn,min){
+  box.innerHTML="";
+  const rows=Object.entries(m).filter(([,c])=>c.l+c.d>=(min||1)).sort((a,b)=>aff(b[1])-aff(a[1]));
+  if(!rows.length){box.appendChild(el("div","small","Rate a few films you've seen to fill this in."));return;}
+  rows.forEach(([k,c])=>{
+    const row=el("div","aff");const a=aff(c);
+    const bar=el("div","affbar");const i=el("i",a>=0?"pos":"neg");i.style.width=(Math.abs(a)*50)+"%";bar.appendChild(i);
+    row.append(el("span",null,labelFn(k)),bar,el("span","small tabular",c.l+" liked · "+c.d+" passed"));
+    row.querySelector(".small").style.textAlign="right";box.appendChild(row);
+  });
+}
+function recommend(n){
+  const t=tasteStats(P.ratings);
+  if(t.seen<3)return[];
+  const likedDirs=new Set(Object.entries(t.dir).filter(([,c])=>c.l>0).map(([k])=>k));
+  return FILMS.filter(f=>!(f.id in P.ratings)||P.ratings[f.id]===0).map(f=>{
+    const ga=f.genres.map(g=>aff(t.gen[g]));const gs=ga.reduce((a,b)=>a+b,0)/ga.length;
+    const ea=aff(t.era[eraOf(f.year)]);const dl=f.director.split(", ").some(d=>likedDirs.has(d));
+    const score=gs+0.6*ea+(dl?0.8:0);
+    const why=dl?"You liked other films by "+f.director.split(", ")[0]:(gs>0?"You like "+GENRES[f.genres.slice().sort((a,b)=>aff(t.gen[b])-aff(t.gen[a]))[0]]:"Something different for you");
+    return{f,score,why};
+  }).sort((a,b)=>b.score-a.score).slice(0,n);
+}
+function renderLore(){
+  const t=tasteStats(P.ratings);
+  $("lpType").textContent=cinemaType().text;
+  $("lpRated").textContent=Object.keys(P.ratings).length;
+  $("lpLikeRate").textContent=t.seen?Math.round(100*t.liked/t.seen)+"%":"–";
+  $("lpGames").textContent=fmt(P.games);$("lpBest").textContent=fmt(P.best);
+  const unseenN=Object.values(P.ratings).filter(v=>v===0).length;
+  $("lpBase").textContent=unseenN+" so far";
+  affRows($("lpGenAff"),t.gen,k=>GENRES[k]);
+  affRows($("lpEraAff"),t.era,k=>eraName(k));
+  const dirs=Object.entries(t.dir).filter(([,c])=>c.l>0).sort((a,b)=>b[1].l-a[1].l||aff(b[1])-aff(a[1])).slice(0,8);
+  const db_=$("lpDirs");db_.innerHTML="";
+  if(!dirs.length)db_.appendChild(el("span","small","Like a few films to see your directors."));
+  dirs.forEach(([d,c])=>{const s=el("span","tag",d);s.appendChild(el("b",null,"♥"+c.l));db_.appendChild(s);});
+  const cs=Object.entries(t.ctry).filter(([,c])=>c.l>0).sort((a,b)=>b[1].l-a[1].l);
+  const cb=$("lpCountries");cb.innerHTML="";
+  if(!cs.length)cb.appendChild(el("span","small","Like films from different countries to fill this in."));
+  cs.forEach(([k,c])=>{const s=el("span","tag",cname(k));s.appendChild(el("b",null,"♥"+c.l));cb.appendChild(s);});
+  const RECN={a:"Well-reviewed films",m:"Films with mixed reviews",p:"Films critics panned"};
+  affRows($("lpRecAff"),t.rec,k=>RECN[k]);
+  const ra=t.rec.a||{l:0,d:0},rp=t.rec.p||{l:0,d:0},agreeN=ra.l+rp.d,agreeT=ra.l+ra.d+rp.l+rp.d;
+  $("lpCritic").textContent=agreeT<5?"Rate a mix of acclaimed films and famous flops to see how your taste compares with the critics.":
+    "You agree with the critics "+Math.round(100*agreeN/agreeT)+"% of the time. You liked "+rp.l+" of the "+(rp.l+rp.d)+" panned films you've seen"+(rp.l+rp.d?(rp.l/(rp.l+rp.d)>=.5?": you're not afraid of a famous flop.":"."):".");
+  const rated=Object.entries(P.ratings).map(([id,v])=>[FILM_BY_ID[id],v]).filter(([f,v])=>f&&f.rating&&v!==0);
+  const avg=a=>a.length?(a.reduce((x,[f])=>x+f.rating,0)/a.length).toFixed(1):null;
+  const al=avg(rated.filter(([,v])=>v===1)),ad=avg(rated.filter(([,v])=>v===-1));
+  if(al&&ad)$("lpCritic").textContent+=" Films you liked average "+al+"/10 on TMDB; films you passed on average "+ad+"/10.";
+  const gb=$("lpGuilty");gb.innerHTML="";
+  const guilty=Object.entries(P.ratings).filter(([id,v])=>v===1&&FILM_BY_ID[id]&&FILM_BY_ID[id].reception==="p").map(([id])=>FILM_BY_ID[id]);
+  if(!guilty.length)gb.appendChild(el("span","small","None yet. Swipe right on a critical flop you secretly love and it shows up here."));
+  guilty.forEach(f=>gb.appendChild(el("span","tag",f.title+" ("+f.year+")")));
+  const rb=$("lpRecs");rb.innerHTML="";const recs=recommend(5);
+  if(!recs.length)rb.appendChild(el("div","small","Rate at least three films you've seen to get recommendations."));
+  recs.forEach(({f,why})=>{const d=el("div","rec");d.append(miniPoster(f),el("b",null,f.title+" ("+f.year+")"),el("span",null,why));rb.appendChild(d);});
+  $("shareToggle").checked=!!P.share;
+  $("shareNote").textContent=DB?"Off by default. Ratings are only reported as combined totals. Turn it off at any time to delete the shared copy.":"Sharing needs you signed in to claude.ai. Your ratings stay on this device.";
+  $("shareToggle").disabled=!DB;
+  renderRank("lp");
+  const box=$("lpCats");box.innerHTML="";
+  Object.entries(CATS).forEach(([k,n])=>box.appendChild(accRow(n,P.cats[k])));
+  const eb=$("lpEras");eb.innerHTML="";
+  ERAS.forEach(e=>eb.appendChild(accRow(e.name,P.ke[e.id])));
+  const a=$("lpAchs");a.innerHTML="";ACHS.forEach(([k])=>a.appendChild(achCard(k,P.ach.includes(k))));
+  $("lpAchCount").textContent="· "+P.ach.length+" of "+ACHS.length;
+}
+function accRow(name,c){
+  c=c||[0,0];const pct=c[1]?Math.round(100*c[0]/c[1]):0;
+  const row=el("div","catrow");const bar=el("div","bar");const i=el("i");i.style.width=pct+"%";bar.appendChild(i);
+  const v=el("span","tabular small",c[1]?pct+"%":"–");v.style.textAlign="right";
+  row.append(el("span",null,name),bar,v);return row;
+}
+$("shareToggle").addEventListener("change",async e=>{
+  P.share=e.target.checked;saveLocal();
+  if(!DB||!UID)return;
+  try{
+    if(P.share){await DB.doc("insights/"+UID).set({ratings:{...P.ratings},updated:Date.now()});toast("Thanks. Your ratings are now shared with Orvandel Studios.");}
+    else{await DB.doc("insights/"+UID).delete();toast("Sharing turned off. Your shared ratings were deleted.");}
+  }catch(err){toast("Couldn't update sharing. Your access level may not allow it.");e.target.checked=false;P.share=false;saveLocal();}
+});
+
+/* ---------- Rank rendering ---------- */
+function renderRank(prefix){
+  const r=rankFor(P.xp),nx=RANKS[r+1],lo=RANKS[r][0],hi=nx?nx[0]:lo,pct=nx?Math.round(100*(P.xp-lo)/(hi-lo)):100;
+  const line=fmt(P.xp)+" XP"+(nx?" · "+fmt(hi-P.xp)+" XP to "+nx[1]:" · top billing");
+  const m={home:["homeRank","homeBar","homeXp"],rs:["rsRank","rsBar","rsRankLine"],lp:["lpRank","lpBar","lpXp"]}[prefix];
+  $(m[0]).textContent=RANKS[r][1];$(m[1]).style.width=pct+"%";$(m[2]).textContent=line;
+}
+function renderHome(){
+  renderRank("home");
+  const done=P.dailyDate===todayStr();$("m-daily").disabled=done;
+  $("dailyMeta").textContent=done?"Played today · "+fmt(P.dailyScore)+" pts":"7 scenes · one take per day";
+  const cl=Math.min(P.lvlUnlocked,LEVELS.length);
+  $("careerMeta").textContent="Level "+cl+" of "+LEVELS.length+" · "+LEVELS[cl-1][0];
+  $("careerStars").textContent=Object.values(P.lvlStars).reduce((a,b)=>a+b,0)+" / "+LEVELS.length*3+" ★";
+  $("customMeta").textContent=Object.keys(CATS).length+" categories · "+ERAS.length+" eras · "+Object.keys(GENRES).length+" genres";
+  const n=Object.keys(P.ratings).length;
+  $("rateMeta").textContent=n?n+" of "+FILMS.length+" films rated":"Swipe right to like · left to pass";
+  const mm=$("homeMinis");if(!mm.childElementCount){const r=rng(hash("minis"+todayStr()));shuffle(FILMS,r).slice(0,3).forEach(f=>mm.appendChild(miniPoster(f)));}
+}
+
+function renderLevels(){
+  const lg=$("legend");lg.innerHTML="";
+  [1,2,3,4,5].forEach(d=>{const sp=el("span");const i=el("i");i.style.background=DIFF_COL[d];sp.append(i,DIFF[d]);lg.appendChild(sp);});
+  const grid=$("levelGrid");grid.innerHTML="";
+  LEVELS.forEach(([name,mix],i)=>{
+    const L=i+1,locked=L>P.lvlUnlocked,st=P.lvlStars[L]||0;
+    const b=el("button","lvl"+(L===P.lvlUnlocked&&!st?" current":""));b.type="button";b.id="lvl-"+L;b.disabled=locked;
+    b.append(el("span","no","LEVEL "+String(L).padStart(2,"0")+(locked?" · LOCKED":"")),el("b",null,name),el("span","stars",st?"★".repeat(st)+"☆".repeat(3-st):(locked?"":"Not cleared")));
+    const m=el("span","mix");mix.forEach((n,d)=>{for(let k=0;k<n;k++){const x=el("i");x.style.background=DIFF_COL[d+1];x.style.flex="1";m.appendChild(x);}});
+    m.title=mix.map((n,d)=>n?n+" "+DIFF[d+1]:"").filter(Boolean).join(", ");
+    b.appendChild(m);
+    b.addEventListener("click",()=>startGame("level",{level:L}));
+    grid.appendChild(b);
+  });
+}
+
+/* ---------- Navigation ---------- */
+function show(name){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on",s.id==="s-"+name));
+  const navName=["play","result","setup","levels"].includes(name)?"home":name;
+  document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-current",b.dataset.go===navName?"page":"false"));
+  if(name!=="play"){clearInterval(timer);}
+  if(name==="home")renderHome();
+  if(name==="setup")renderSetup();
+  if(name==="levels")renderLevels();
+  if(name==="rate"){if(!deckOrder.length||deckOrder.every(id=>id in P.ratings))buildDeck();renderDeck();}
+  if(name==="lore")renderLore();
+  if(name==="board")renderBoard();
+  if(name==="studio")renderStudio();
+  window.scrollTo({top:0});
+}
+function leaveGame(){G=null;clearInterval(timer);}
+document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>{leaveGame();show(b.dataset.go);}));
+$("brandBtn").addEventListener("click",()=>{leaveGame();show("home");});
+$("m-feature").addEventListener("click",()=>startGame("feature"));
+$("m-daily").addEventListener("click",()=>startGame("daily"));
+$("m-sudden").addEventListener("click",()=>startGame("sudden"));
+$("m-custom").addEventListener("click",()=>show("setup"));
+$("m-deep").addEventListener("click",()=>startGame("deep"));
+$("m-career").addEventListener("click",()=>show("levels"));
+$("m-rate").addEventListener("click",()=>show("rate"));
+$("nextBtn").addEventListener("click",next);
+$("againBtn").addEventListener("click",()=>{const g=G_last;if(!g||g.mode==="daily")return show("home");
+  if(g.mode==="level"){const L=g.passed&&g.f.level<LEVELS.length?g.f.level+1:g.f.level;return startGame("level",{level:L});}
+  startGame(g.mode,g.f);});
+$("homeBtn").addEventListener("click",()=>show("home"));
+$("copyBtn").addEventListener("click",async()=>{if(!G_last)return;try{await navigator.clipboard.writeText(shareText(G_last));toast("Result copied. Paste it anywhere.");}catch(e){toast("Copying isn't allowed here. Select the score and copy it by hand.");}});
+document.addEventListener("keydown",e=>{
+  if($("s-rate").classList.contains("on")){
+    if(e.key==="ArrowRight"){e.preventDefault();rate(1);}else if(e.key==="ArrowLeft"){e.preventDefault();rate(-1);}else if(e.key==="ArrowDown"){e.preventDefault();rate(0);}
+    return;
+  }
+  if(!$("s-play").classList.contains("on")||!G)return;
+  if(!G.answered&&["1","2","3","4"].includes(e.key)){$("ans-"+(+e.key-1))?.click();}
+  else if(G.answered&&(e.key==="Enter"||e.key===" ")&&document.activeElement!==$("nextBtn")){e.preventDefault();next();}
+});
+
+/* ============ SHARED DATA ============ */
+let boardTab="career",careerRows=[],dailyRows=[],boardReady=false,insightRows=[],insightsReady=false;
+$("tab-career").addEventListener("click",()=>{boardTab="career";renderBoard();});
+$("tab-daily").addEventListener("click",()=>{boardTab="daily";renderBoard();});
+async function renderBoard(){
+  ["career","daily"].forEach(t=>{$("tab-"+t).setAttribute("aria-selected",boardTab===t);$("tab-"+t).style.borderColor=boardTab===t?"var(--lamp)":"";});
+  $("boardColA").textContent=boardTab==="career"?"Billing":"Correct";$("boardColB").textContent=boardTab==="career"?"XP":"Score";
+  const body=$("boardBody");
+  const addRow=(cells,me)=>{const tr=el("tr",me?"me":"");cells.forEach((c,k)=>{const td=el("td",k===3?"num":"",String(c));tr.appendChild(td);});body.appendChild(tr);};
+  if(!DB){body.innerHTML="";
+    if(boardTab==="career")addRow(["1","You",RANKS[rankFor(P.xp)][1],fmt(P.xp)],true);
+    else addRow(["1","You",P.dailyDate===todayStr()?P.dailyCorrect+"/7":"not yet",P.dailyDate===todayStr()?fmt(P.dailyScore):"–"],true);
+    $("boardNote").textContent="The shared leaderboard needs you signed in to claude.ai. Your progress is saved on this device.";return;}
+  const rows=boardTab==="career"?careerRows:dailyRows;
+  if(!boardReady){body.innerHTML='<tr><td colspan="4" class="small">Loading the board…</td></tr>';return;}
+  if(!rows.length){body.innerHTML="";const tr=el("tr");const td=el("td","small",boardTab==="career"?"No one on the board yet. Finish a quiz to take the first spot.":"No Daily Reel scores yet today. Be the first.");td.colSpan=4;tr.appendChild(td);body.appendChild(tr);return;}
+  let names={};try{names=await USER.profiles(rows.map(r=>r.id))||{};}catch(e){}
+  body.innerHTML="";
+  rows.forEach((r,i)=>{const nm=((names[r.id]&&names[r.id].name)||"Player")+(r.id===UID?" (you)":"");
+    if(boardTab==="career")addRow([i+1,nm,RANKS[rankFor(+r.d.xp||0)][1],fmt(+r.d.xp||0)],r.id===UID);
+    else addRow([i+1,nm,(+r.d.dailyCorrect||0)+"/7",fmt(+r.d.dailyScore||0)],r.id===UID);});
+  $("boardNote").textContent=writeBlocked?"You can view the board, but your access level doesn't let you post scores. Ask the owner for Contributor access.":"Your progress is posted automatically after each quiz.";
+}
+async function syncProfile(){
+  if(!DB||!UID)return;
+  try{await DB.doc("data/users/"+UID+"/profile").set(JSON.parse(JSON.stringify(P)));}catch(e){}
+}
+async function postScore(){
+  if(!DB||!UID||writeBlocked)return;
+  const body={xp:P.xp,best:P.best,games:P.games,updated:Date.now()};
+  if(P.dailyDate){body.dailyDate=P.dailyDate;body.dailyScore=P.dailyScore;body.dailyCorrect=P.dailyCorrect||0;}
+  try{await DB.doc("scores/"+UID).set(body);}catch(e){if(e&&e.code==="invalid_argument")writeBlocked=true;}
+}
+let syncT=null;
+function scheduleSync(){clearTimeout(syncT);syncT=setTimeout(async()=>{await syncProfile();if(P.share&&DB&&UID){try{await DB.doc("insights/"+UID).set({ratings:{...P.ratings},updated:Date.now()});}catch(e){}}},2500);}
+
+/* ---------- Studio insights (owner) ---------- */
+function renderStudio(){
+  if(!IS_OWNER){$("stNote").textContent="Only the owner can see studio insights.";return;}
+  const players=insightRows.length;const agg={};let total=0,seen=0,liked=0;const gen={},era={},recm={};
+  insightRows.forEach(r=>{for(const [id,v] of Object.entries(r.ratings||{})){const f=FILM_BY_ID[id];if(!f)continue;total++;
+    const a=agg[id]||{n:0,l:0,d:0,u:0};a.n++;if(v===1)a.l++;else if(v===-1)a.d++;else a.u++;agg[id]=a;
+    if(v!==0){seen++;if(v===1)liked++;const add=(m,k)=>{const c=m[k]||{l:0,d:0};if(v===1)c.l++;else c.d++;m[k]=c;};f.genres.forEach(g=>add(gen,g));add(era,eraOf(f.year));add(recm,f.reception||"a");}}});
+  $("stPlayers").textContent=players;$("stRatings").textContent=fmt(total);
+  $("stLike").textContent=seen?Math.round(100*liked/seen)+"%":"–";$("stSeen").textContent=total?Math.round(100*seen/total)+"%":"–";
+  const ws=c=>weighted(c,.5);
+  const likeRows=(box,m,lab)=>{box.innerHTML="";const rows=Object.entries(m).sort((a,b)=>ws(b[1])-ws(a[1]));
+    if(!rows.length){box.appendChild(el("div","small","No shared ratings yet."));return;}
+    rows.forEach(([k,c])=>{const pct=Math.round(100*c.l/(c.l+c.d));const row=el("div","catrow");const bar=el("div","bar");const i=el("i");i.style.width=Math.round(100*ws(c))+"%";bar.appendChild(i);const v=el("span","small tabular",pct+"%");v.title="Raw "+c.l+" of "+(c.l+c.d)+"; bar is weighted by number of ratings";v.style.textAlign="right";row.append(el("span",null,lab(k)+" ("+(c.l+c.d)+")"),bar,v);box.appendChild(row);});};
+  likeRows($("stGen"),gen,k=>GENRES[k]);likeRows($("stEra"),era,k=>eraName(k));
+  likeRows($("stRec"),recm,k=>({a:"Well reviewed",m:"Mixed reviews",p:"Panned by critics"})[k]);
+  const tb=$("stFilms");tb.innerHTML="";
+  Object.entries(agg).sort((a,b)=>b[1].n-a[1].n).slice(0,15).forEach(([id,a])=>{const tr=el("tr");const s=a.l+a.d;
+    [FILM_BY_ID[id].title+" ("+FILM_BY_ID[id].year+")",a.n,s?Math.round(100*a.l/s)+"%":"–",Math.round(100*a.u/a.n)+"%"].forEach((c,k)=>tr.appendChild(el("td",k?"num":"",String(c))));tb.appendChild(tr);});
+  if(!Object.keys(agg).length){const tr=el("tr");const td=el("td","small","No shared ratings yet. Players can opt in from Your Lore.");td.colSpan=4;tr.appendChild(td);tb.appendChild(tr);}
+  $("stNote").textContent=insightsReady?"Updates live as players share ratings.":"Loading shared ratings…";
+}
+
+async function initShared(){
+  try{
+    const [db,user]=await Promise.all([window.claude?.use?.("db"),window.claude?.use?.("user")]);
+    if(!db||!user)return;
+    const id=await user.id();if(!id)return;
+    DB=db;USER=user;UID=id;
+    try{if(await user.can("data.write")===false)writeBlocked=true;}catch(e){}
+    try{IS_OWNER=!!(await user.isOwner());}catch(e){}
+    $("nav-studio").hidden=!IS_OWNER;
+    try{const snap=await DB.doc("data/users/"+UID+"/profile").get();
+      if(snap.exists){const r=Object.assign(BLANK(),snap.data());
+        const nr=o=>Object.keys(o.ratings||{}).length;
+        if(r.xp>P.xp||nr(r)>nr(P)){const keepRatings={...r.ratings,...P.ratings};const lu=Math.max(r.lvlUnlocked||1,P.lvlUnlocked||1),ls={...(r.lvlStars||{})};for(const[k,v]of Object.entries(P.lvlStars||{}))ls[k]=Math.max(ls[k]||0,v);P=JSON.parse(JSON.stringify(r.xp>=P.xp?r:P));P.ratings=keepRatings;P.lvlUnlocked=lu;P.lvlStars=ls;saveLocal();}}}catch(e){}
+    const cur=document.querySelector(".screen.on");if(cur)show(cur.id.slice(2)==="play"?"play":cur.id.slice(2));
+    const lt=setTimeout(()=>{if(!boardReady)$("boardNote").textContent="The leaderboard can't be reached yet. It will appear when the connection returns.";},10000);
+    DB.collection("scores").orderBy("xp","desc").limit(25).onSnapshot(s=>{careerRows=s.docs.map(d=>({id:d.id,d:d.data()||{}}));if(!s.metadata.fromCache){boardReady=true;clearTimeout(lt);}if($("s-board").classList.contains("on"))renderBoard();},()=>{boardReady=true;clearTimeout(lt);});
+    DB.collection("scores").where("dailyDate","==",todayStr()).orderBy("dailyScore","desc").limit(25).onSnapshot(s=>{dailyRows=s.docs.map(d=>({id:d.id,d:d.data()||{}}));if($("s-board").classList.contains("on"))renderBoard();},()=>{});
+    if(IS_OWNER){DB.collection("insights").limit(1000).onSnapshot(s=>{insightRows=s.docs.map(d=>d.data()||{});if(!s.metadata.fromCache)insightsReady=true;if($("s-studio").classList.contains("on"))renderStudio();},()=>{insightsReady=true;});}
+    if(P.games>0){syncProfile();postScore();}
+  }catch(e){}
+}
+
+/* ---------- Boot ---------- */
+function start(saved){
+  if(saved&&saved.G&&saved.G.ids&&saved.G.ids.every(i=>QQ(i))){G=saved.G;show("play");renderQuestion();}
+  else show("home");
+  initShared();
+}
+window.claude?.hot?.snapshot?.(()=>({G:G&&!G.answered?G:null}));
+window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
+</script>
+</body>
+</html>
